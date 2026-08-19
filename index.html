@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Metallers — Gold &amp; Silver Rate Terminal</title>
+<style>
+  :root{
+    --bg:#191919;
+    --panel:#222222;
+    --panel-soft:#1e1e1e;
+    --border:#2a2a2a;
+    --border-soft:#262626;
+    --text-primary:#e9e9e9;
+    --text-secondary:#8c8c8c;
+    --text-tertiary:#5a5a5a;
+    --green:#00d09c;
+    --green-dim:rgba(0,208,156,.14);
+    --red:#df514c;
+    --red-dim:rgba(223,81,76,.14);
+    --blue:#4184f3;
+    --blue-dim:rgba(65,132,243,.14);
+    --gold-accent:#d4af37;
+    --silver-accent:#c7cbd1;
+    --radius-sm:3px;
+    --radius-md:6px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    --header-h:56px;
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html,body{height:100%;margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text-primary);
+    font-family:var(--font);
+    font-size:13px;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  button,input,select{font-family:inherit;font-size:inherit;color:inherit;}
+  button{cursor:pointer;}
+  ::selection{background:var(--blue-dim);}
+
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:#333;border-radius:4px;}
+  ::-webkit-scrollbar-thumb:hover{background:#404040;}
+
+  :focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
+
+  .tabular{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
+
+  /* ---------- APP SHELL ---------- */
+  #app{display:flex;flex-direction:column;height:100vh;}
+
+  /* ---------- HEADER ---------- */
+  .topbar{
+    flex:0 0 var(--header-h);
+    height:var(--header-h);
+    display:flex;
+    align-items:center;
+    background:var(--panel);
+    border-bottom:1px solid var(--border);
+    padding:0 18px;
+    gap:24px;
+    z-index:20;
+  }
+  .brand{display:flex;align-items:center;gap:9px;flex:1 1 33%;min-width:150px;}
+  .brand-mark{width:22px;height:22px;flex:0 0 auto;}
+  .brand-name{font-weight:700;font-size:16.5px;letter-spacing:-0.02em;color:var(--text-primary);}
+  .brand-name span{color:var(--green);}
+  .live-pulse{
+    width:6px;height:6px;border-radius:50%;background:var(--green);
+    margin-left:2px;position:relative;flex:0 0 auto;
+  }
+  .live-pulse::after{
+    content:"";position:absolute;inset:-4px;border-radius:50%;
+    border:1px solid var(--green);opacity:.6;animation:pulseRing 1.8s ease-out infinite;
+  }
+  @keyframes pulseRing{0%{transform:scale(.4);opacity:.7;}100%{transform:scale(1.9);opacity:0;}}
+
+  .topbar-right{flex:2 1 67%;display:flex;align-items:center;justify-content:flex-end;gap:28px;}
+
+  .navtabs{display:flex;align-items:center;gap:4px;}
+  .navtab{
+    background:transparent;border:1px solid transparent;color:var(--text-secondary);
+    padding:7px 14px;border-radius:var(--radius-md);font-weight:500;font-size:13px;
+    transition:color .15s ease,background .15s ease;
+  }
+  .navtab:hover{color:var(--text-primary);background:rgba(255,255,255,.04);}
+  .navtab.active{color:var(--text-primary);background:rgba(65,132,243,.12);border-color:rgba(65,132,243,.25);}
+
+  .clock-wrap{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;min-width:118px;}
+  .clock-time{font-weight:600;font-size:14px;letter-spacing:.02em;}
+  .clock-date{font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:5px;}
+  .status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;}
+  .status-dot.off{background:var(--text-tertiary);}
+
+  /* ---------- TOP-LEVEL VIEW SWITCH (Dashboard / Calculator / Profile) ---------- */
+  .content{flex:1;min-height:0;position:relative;}
+  .toplevel-view{
+    position:absolute;inset:0;
+    opacity:1;transform:translateY(0);
+    transition:opacity .2s ease,transform .2s ease;
+    display:flex;
+  }
+  .toplevel-view.tv-hidden{opacity:0;pointer-events:none;transform:translateY(4px);}
+
+  /* ---------- DASHBOARD LAYOUT ---------- */
+  #dashboard-view{flex-direction:row;}
+
+  /* --- Sidebar --- */
+  .sidebar{
+    flex:0 0 34%;
+    max-width:430px;
+    min-width:300px;
+    border-right:1px solid var(--border);
+    background:var(--panel);
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  .sidebar-header{padding:12px 12px 10px;border-bottom:1px solid var(--border-soft);flex:0 0 auto;}
+  .search-wrap{
+    display:flex;align-items:center;gap:8px;
+    background:var(--panel-soft);border:1px solid var(--border);border-radius:var(--radius-md);
+    padding:7px 10px;transition:border-color .15s ease;
+  }
+  .search-wrap:focus-within{border-color:var(--blue);}
+  .search-wrap svg{flex:0 0 auto;color:var(--text-tertiary);width:14px;height:14px;}
+  .search-input{
+    background:transparent;border:none;outline:none;flex:1;min-width:0;
+    color:var(--text-primary);font-size:12.5px;
+  }
+  .search-input::placeholder{color:var(--text-tertiary);}
+  .search-kbd{
+    flex:0 0 auto;font-size:10.5px;color:var(--text-tertiary);
+    border:1px solid var(--border);border-radius:3px;padding:1.5px 5px;
+    background:var(--panel);white-space:nowrap;
+  }
+
+  .watchlist{flex:1;overflow-y:auto;min-height:0;padding-bottom:8px;}
+  .w-group-label{
+    padding:11px 14px 5px;font-size:10px;letter-spacing:.08em;color:var(--text-tertiary);
+    font-weight:700;text-transform:uppercase;
+  }
+  .w-row{
+    position:relative;padding:8px 14px;border-bottom:1px solid var(--border-soft);
+    cursor:pointer;transition:background-color .5s ease;
+  }
+  .w-row:hover{background:rgba(255,255,255,.025);}
+  .w-row.selected{background:rgba(65,132,243,.08);}
+  .w-row.selected::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--blue);
+  }
+  .w-main{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  .w-name{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .w-symbol{font-weight:600;font-size:12.5px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .w-sub{font-size:10.5px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .w-price-block{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:0 0 auto;}
+  .w-price{font-weight:700;font-size:13px;}
+  .w-change{font-size:10.5px;}
+  .pos{color:var(--green);}
+  .neg{color:var(--red);}
+
+  .w-actions{
+    max-height:0;opacity:0;overflow:hidden;
+    transition:max-height .2s ease,opacity .18s ease,margin-top .2s ease;
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  .w-row:hover .w-actions,.w-row.expanded .w-actions{max-height:40px;opacity:1;margin-top:9px;}
+  .w-action-btns{display:flex;align-items:center;gap:6px;}
+  .act-btn{
+    width:24px;height:24px;border-radius:var(--radius-sm);border:1px solid var(--border);
+    background:var(--panel-soft);display:flex;align-items:center;justify-content:center;
+    color:var(--text-secondary);transition:all .12s ease;
+  }
+  .act-btn:hover{border-color:var(--blue);color:var(--blue);}
+  .act-btn svg{width:12px;height:12px;}
+  .buy-btn{color:var(--green);border-color:rgba(0,208,156,.3);font-weight:700;font-size:11px;}
+  .buy-btn:hover{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+  .sell-btn{color:var(--red);border-color:rgba(223,81,76,.3);font-weight:700;font-size:11px;}
+  .sell-btn:hover{background:var(--red-dim);border-color:var(--red);color:var(--red);}
+  .w-hl{display:flex;gap:9px;font-size:10px;color:var(--text-tertiary);white-space:nowrap;}
+  .w-hl b{font-weight:600;color:var(--text-secondary);}
+  .w-hl .hi{color:var(--green);}
+  .w-hl .lo{color:var(--red);}
+
+  .sidebar-footer{
+    flex:0 0 auto;padding:8px 14px;border-top:1px solid var(--border-soft);
+    font-size:10px;color:var(--text-tertiary);text-align:center;
+  }
+
+  /* --- Main panel (grid / chart) --- */
+  .main-panel{flex:1;min-width:0;position:relative;background:var(--bg);}
+  .panel-view{position:absolute;inset:0;transition:opacity .22s ease,transform .22s ease;}
+  .panel-hidden{opacity:0;pointer-events:none;transform:scale(.985);}
+
+  /* Overview grid */
+  .overview-grid{
+    position:absolute;inset:12px;
+    display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);
+    gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius-md);
+    overflow:hidden;
+  }
+  .grid-card{
+    background:var(--panel);padding:14px 16px;display:flex;flex-direction:column;min-width:0;min-height:0;
+    cursor:pointer;transition:background .15s ease;position:relative;
+  }
+  .grid-card:hover{background:#252525;}
+  .grid-card.clock-card{cursor:default;}
+  .grid-card.clock-card:hover{background:var(--panel);}
+  .grid-card-header{display:flex;align-items:flex-start;justify-content:space-between;flex:0 0 auto;margin-bottom:6px;}
+  .gc-title{font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--text-secondary);text-transform:uppercase;}
+  .gc-price{font-size:17px;font-weight:700;margin-top:3px;}
+  .gc-change{font-size:11px;margin-top:2px;}
+  .grid-chart-wrap{flex:1;min-height:0;margin:2px -4px -4px;}
+  .grid-chart-wrap svg{width:100%;height:100%;display:block;}
+
+  .clock-card-time{font-size:30px;font-weight:700;letter-spacing:.01em;margin:2px 0 0;}
+  .clock-card-date{font-size:11.5px;color:var(--text-secondary);margin-top:3px;}
+  .clock-session{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:var(--text-secondary);}
+  .clock-mini-stats{margin-top:auto;display:flex;flex-direction:column;gap:6px;padding-top:10px;}
+  .cms-row{display:flex;align-items:center;justify-content:space-between;font-size:11px;}
+  .cms-name{color:var(--text-tertiary);}
+  .cms-val{font-weight:600;}
+
+  /* Chart (full) view */
+  .chart-view-inner{position:absolute;inset:12px;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;}
+  .chart-topbar{flex:0 0 auto;padding:14px 18px 12px;border-bottom:1px solid var(--border-soft);display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap;}
+  .chart-back-btn{
+    flex:0 0 auto;width:30px;height:30px;border-radius:var(--radius-md);border:1px solid var(--border);
+    background:var(--panel-soft);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);
+    transition:all .15s ease;
+  }
+  .chart-back-btn:hover{border-color:var(--blue);color:var(--blue);}
+  .chart-back-btn svg{width:15px;height:15px;}
+  .chart-title-block{flex:0 0 auto;min-width:170px;}
+  .chart-symbol{font-size:16px;font-weight:700;}
+  .chart-name{font-size:11px;color:var(--text-tertiary);margin-top:1px;}
+  .chart-price-block{flex:0 0 auto;display:flex;flex-direction:column;}
+  .chart-price{font-size:22px;font-weight:700;}
+  .chart-change{font-size:12px;margin-top:2px;}
+  .chart-stats{flex:1;display:flex;gap:22px;flex-wrap:wrap;padding-top:4px;min-width:200px;}
+  .stat-item{display:flex;flex-direction:column;gap:2px;}
+  .stat-label{font-size:9.5px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;}
+  .stat-value{font-size:12.5px;font-weight:600;}
+
+  .chart-controls{flex:0 0 auto;padding:9px 18px;border-bottom:1px solid var(--border-soft);display:flex;align-items:flex-end;justify-content:flex-start;gap:16px;flex-wrap:wrap;row-gap:10px;}
+  .ctrl-group{display:flex;flex-direction:column;gap:5px;}
+  .ctrl-group-zoom{margin-left:auto;flex-direction:row;align-items:center;gap:8px;}
+  .ctrl-group-zoom .ctrl-label{padding-bottom:1px;}
+  .ctrl-label{font-size:9px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.07em;font-weight:700;padding-left:1px;}
+  .tf-buttons,.ct-buttons,.iv-buttons,.zoom-buttons{display:flex;align-items:center;gap:4px;background:var(--panel-soft);padding:3px;border-radius:var(--radius-md);border:1px solid var(--border);}
+  .tf-btn,.ct-btn,.iv-btn,.zoom-btn{padding:5px 11px;border-radius:4px;background:transparent;border:none;color:var(--text-secondary);font-size:11.5px;font-weight:600;transition:all .12s ease;white-space:nowrap;}
+  .tf-btn:hover,.ct-btn:hover,.iv-btn:hover,.zoom-btn:hover{color:var(--text-primary);}
+  .tf-btn.active,.ct-btn.active,.iv-btn.active{background:var(--blue);color:#fff;}
+  .zoom-btn{padding:5px 10px;min-width:28px;text-align:center;}
+  .zoom-btn.zoom-reset{font-size:10.5px;}
+  .zoom-divider{width:1px;align-self:stretch;background:var(--border);margin:2px 1px;}
+  .zoom-pct{font-size:10.5px;color:var(--text-tertiary);white-space:nowrap;min-width:74px;}
+
+  .chart-canvas-wrap{flex:1;min-height:0;position:relative;padding:14px 18px 8px;cursor:grab;touch-action:none;user-select:none;}
+  .chart-canvas-wrap svg{width:100%;height:100%;display:block;}
+  .chart-canvas-wrap.dragging{cursor:grabbing;}
+  .chart-hint{position:absolute;right:20px;bottom:6px;font-size:9.5px;color:var(--text-tertiary);opacity:.5;pointer-events:none;letter-spacing:.01em;}
+  @media (max-width:700px){ .chart-hint{display:none;} }
+  .chart-axis-x{display:flex;justify-content:space-between;padding:0 18px 14px;font-size:10.5px;color:var(--text-tertiary);}
+
+  /* ---------- CALCULATOR ---------- */
+  #calculator-view,#profile-view{flex:1;overflow-y:auto;justify-content:center;}
+  .page-wrap{width:100%;max-width:620px;margin:0 auto;padding:40px 20px 60px;}
+  .page-title{font-size:20px;font-weight:700;margin:0 0 4px;}
+  .page-sub{font-size:12.5px;color:var(--text-secondary);margin:0 0 22px;}
+
+  .calc-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-md);padding:20px;}
+  .calc-live-rate{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--panel-soft);border:1px solid var(--border-soft);border-radius:var(--radius-md);
+    padding:11px 14px;margin-bottom:18px;
+  }
+  .clr-label{font-size:11px;color:var(--text-tertiary);}
+  .clr-value{font-size:15px;font-weight:700;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-field{display:flex;flex-direction:column;gap:6px;}
+  .form-field.span2{grid-column:1/-1;}
+  .form-field label{font-size:11px;color:var(--text-secondary);font-weight:600;}
+  .form-field select,.form-field input[type=number]{
+    background:var(--panel-soft);border:1px solid var(--border);border-radius:var(--radius-sm);
+    padding:9px 10px;color:var(--text-primary);outline:none;transition:border-color .15s ease;
+  }
+  .form-field select:focus,.form-field input:focus{border-color:var(--blue);}
+  .weight-row{display:flex;gap:8px;}
+  .weight-row input{flex:1;min-width:0;}
+  .weight-row select{flex:0 0 84px;}
+  .calc-checkbox-row{display:flex;align-items:center;gap:8px;margin-top:4px;}
+  .calc-checkbox-row input{accent-color:var(--blue);}
+  .calc-checkbox-row label{font-size:12px;color:var(--text-secondary);}
+
+  .calc-result{margin-top:20px;border-top:1px dashed var(--border);padding-top:16px;}
+  .result-line{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;color:var(--text-secondary);}
+  .result-line b{color:var(--text-primary);font-weight:600;}
+  .result-total{
+    display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:12px;
+    border-top:1px solid var(--border-soft);font-size:15px;font-weight:700;
+  }
+  .result-total span:last-child{color:var(--green);}
+
+  /* ---------- PROFILE ---------- */
+  .profile-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;}
+  .profile-top{display:flex;align-items:center;gap:16px;}
+  .profile-avatar{
+    width:58px;height:58px;border-radius:50%;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--blue),var(--gold-accent));
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:#fff;
+  }
+  .profile-name{font-size:17px;font-weight:700;}
+  .profile-id{font-size:11.5px;color:var(--text-tertiary);margin-top:2px;}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px;margin-top:8px;}
+  .badge-green{background:var(--green-dim);color:var(--green);}
+  .badge svg{width:10px;height:10px;}
+
+  .profile-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px;padding-top:20px;border-top:1px solid var(--border-soft);}
+  .field{display:flex;flex-direction:column;gap:3px;}
+  .field-label{font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;}
+  .field-value{font-size:13px;font-weight:600;}
+
+  .stats-row{display:flex;gap:1px;margin-top:20px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;}
+  .stat-box{flex:1;background:var(--panel-soft);padding:12px 14px;text-align:center;}
+  .stat-box .n{font-size:18px;font-weight:700;}
+  .stat-box .l{font-size:10px;color:var(--text-tertiary);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
+
+  .prefs-list{margin-top:20px;padding-top:20px;border-top:1px solid var(--border-soft);display:flex;flex-direction:column;gap:10px;}
+  .pref-item{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;}
+  .pref-item .pn{color:var(--text-secondary);}
+  .pill{font-size:11px;font-weight:600;background:var(--panel-soft);border:1px solid var(--border);padding:4px 10px;border-radius:20px;}
+
+  .logout-btn{
+    margin-top:22px;width:100%;padding:10px;border-radius:var(--radius-md);
+    background:transparent;border:1px solid rgba(223,81,76,.35);color:var(--red);font-weight:600;font-size:12.5px;
+    transition:all .15s ease;
+  }
+  .logout-btn:hover{background:var(--red-dim);border-color:var(--red);}
+
+  /* ---------- TOAST ---------- */
+  .toast-container{position:fixed;bottom:18px;right:18px;display:flex;flex-direction:column;gap:8px;z-index:100;}
+  .toast{
+    background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--blue);
+    border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;min-width:200px;
+    box-shadow:0 6px 20px rgba(0,0,0,.35);animation:toastIn .18s ease;
+  }
+  .toast.buy{border-left-color:var(--green);}
+  .toast.sell{border-left-color:var(--red);}
+  .toast.fade{animation:toastOut .25s ease forwards;}
+  @keyframes toastIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes toastOut{to{opacity:0;transform:translateY(6px);}}
+
+  /* ---------- FLASH TICK ---------- */
+  @keyframes flashUp{0%{background-color:var(--green-dim);}100%{background-color:transparent;}}
+  @keyframes flashDown{0%{background-color:var(--red-dim);}100%{background-color:transparent;}}
+  .flash-up{animation:flashUp .7s ease-out;}
+  .flash-down{animation:flashDown .7s ease-out;}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:980px){
+    .overview-grid{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr);}
+  }
+  @media (max-width:820px){
+    #dashboard-view{flex-direction:column;}
+    .sidebar{flex:0 0 46vh;max-width:none;border-right:none;border-bottom:1px solid var(--border);}
+    .main-panel{flex:1;}
+    .topbar{gap:12px;padding:0 12px;}
+    .topbar-right{gap:14px;}
+    .navtab{padding:6px 9px;font-size:12px;}
+  }
+  @media (max-width:640px){
+    .overview-grid{grid-template-columns:1fr;grid-template-rows:repeat(6,minmax(120px,1fr));overflow-y:auto;}
+    .clock-wrap{min-width:auto;}
+    .form-grid{grid-template-columns:1fr;}
+    .profile-fields{grid-template-columns:1fr;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="12" width="4" height="10" rx="1" fill="#4184f3"/>
+        <rect x="10" y="6" width="4" height="16" rx="1" fill="#00d09c"/>
+        <rect x="18" y="2" width="4" height="20" rx="1" fill="#d4af37"/>
+      </svg>
+      <span class="brand-name">Metal<span>lers</span></span>
+      <span class="live-pulse" title="Live data streaming"></span>
+    </div>
+    <div class="topbar-right">
+      <nav class="navtabs" id="navtabs">
+        <button class="navtab active" data-tab="dashboard">Dashboard</button>
+        <button class="navtab" data-tab="calculator">Calculator</button>
+        <button class="navtab" data-tab="profile">Profile</button>
+      </nav>
+      <div class="clock-wrap">
+        <div class="clock-time tabular" id="headerClock">--:--:-- --</div>
+        <div class="clock-date" id="headerDate"><span class="status-dot" id="headerStatusDot"></span><span id="headerDateText">-</span></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== CONTENT ===================== -->
+  <div class="content">
+
+    <!-- ---------- DASHBOARD ---------- -->
+    <section class="toplevel-view" id="dashboard-view">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="search-input" id="searchInput" placeholder="Search instruments...">
+            <span class="search-kbd">Ctrl+K</span>
+          </div>
+        </div>
+        <div class="watchlist" id="watchlist"></div>
+        <div class="sidebar-footer">Simulated data for demonstration only</div>
+      </aside>
+
+      <div class="main-panel">
+        <div class="panel-view" id="grid-view">
+          <div class="overview-grid" id="overviewGrid"></div>
+        </div>
+        <div class="panel-view panel-hidden" id="chart-view">
+          <div class="chart-view-inner">
+            <div class="chart-topbar">
+              <button class="chart-back-btn" id="backToGridBtn" title="Return to grid view">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              </button>
+              <div class="chart-title-block">
+                <div class="chart-symbol" id="chartSymbol">-</div>
+                <div class="chart-name" id="chartName">-</div>
+              </div>
+              <div class="chart-price-block">
+                <div class="chart-price tabular" id="chartPrice">-</div>
+                <div class="chart-change tabular" id="chartChange">-</div>
+              </div>
+              <div class="chart-stats" id="chartStats"></div>
+            </div>
+            <div class="chart-controls">
+              <div class="ctrl-group">
+                <span class="ctrl-label">Range</span>
+                <div class="tf-buttons" id="tfButtons">
+                  <button class="tf-btn active" data-tf="1D">1D</button>
+                  <button class="tf-btn" data-tf="1W">1W</button>
+                  <button class="tf-btn" data-tf="1M">1M</button>
+                  <button class="tf-btn" data-tf="1Y">1Y</button>
+                  <button class="tf-btn" data-tf="ALL">ALL</button>
+                </div>
+              </div>
+              <div class="ctrl-group">
+                <span class="ctrl-label">Interval</span>
+                <div class="iv-buttons" id="ivButtons"></div>
+              </div>
+              <div class="ctrl-group">
+                <span class="ctrl-label">Type</span>
+                <div class="ct-buttons" id="ctButtons">
+                  <button class="ct-btn active" data-ct="line">Line</button>
+                  <button class="ct-btn" data-ct="candle">Candles</button>
+                </div>
+              </div>
+              <div class="ctrl-group ctrl-group-zoom">
+                <span class="ctrl-label">Zoom</span>
+                <div class="zoom-buttons" id="zoomButtons">
+                  <button class="zoom-btn" data-zoom="xout" title="Zoom out (X axis)">−</button>
+                  <button class="zoom-btn" data-zoom="xin" title="Zoom in (X axis)">+</button>
+                  <span class="zoom-divider"></span>
+                  <button class="zoom-btn" data-zoom="yout" title="Zoom out (Y axis)">Y−</button>
+                  <button class="zoom-btn" data-zoom="yin" title="Zoom in (Y axis)">Y+</button>
+                  <span class="zoom-divider"></span>
+                  <button class="zoom-btn zoom-reset" data-zoom="reset" title="Reset zoom">Reset</button>
+                </div>
+                <span class="zoom-pct" id="zoomIndicator">X 1.0x · Y 1.0x</span>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap" id="chartCanvasWrap">
+              <svg id="bigChartSvg" viewBox="0 0 1000 380" preserveAspectRatio="none"></svg>
+              <div class="chart-hint">Scroll to zoom · Shift+scroll for Y-axis · Drag to pan · Double-click to reset</div>
+            </div>
+            <div class="chart-axis-x" id="chartAxisX"><span>-</span><span>-</span><span>-</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- CALCULATOR ---------- -->
+    <section class="toplevel-view tv-hidden" id="calculator-view">
+      <div class="page-wrap">
+        <h1 class="page-title">Rate Calculator</h1>
+        <p class="page-sub">Estimate the value of gold or silver using live simulated rates.</p>
+        <div class="calc-card">
+          <div class="calc-live-rate">
+            <span class="clr-label" id="calcRateLabel">Live rate · GOLD INR 9999</span>
+            <span class="clr-value tabular" id="calcRateValue">-</span>
+          </div>
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="calcMetal">Metal</label>
+              <select id="calcMetal">
+                <option value="gold">Gold</option>
+                <option value="silver">Silver</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="calcPurity">Purity</label>
+              <select id="calcPurity">
+                <option value="9999">999.9 (24K)</option>
+                <option value="995">995 (22K)</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="calcRateType">Rate type</label>
+              <select id="calcRateType"></select>
+            </div>
+            <div class="form-field">
+              <label for="calcWeight">Weight</label>
+              <div class="weight-row">
+                <input type="number" id="calcWeight" min="0" step="0.01" value="10">
+                <select id="calcUnit">
+                  <option value="g">grams</option>
+                  <option value="kg">kg</option>
+                  <option value="tola">tola</option>
+                  <option value="oz">oz (troy)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-field">
+              <label for="calcMaking">Making charges (%)</label>
+              <input type="number" id="calcMaking" min="0" step="0.5" value="0">
+            </div>
+            <div class="form-field">
+              <label>&nbsp;</label>
+              <div class="calc-checkbox-row">
+                <input type="checkbox" id="calcGst">
+                <label for="calcGst">Add 3% GST</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="calc-result">
+            <div class="result-line"><span>Rate used</span><b class="tabular" id="resRate">-</b></div>
+            <div class="result-line"><span>Base value</span><b class="tabular" id="resBase">-</b></div>
+            <div class="result-line"><span>Making charges</span><b class="tabular" id="resMaking">-</b></div>
+            <div class="result-line"><span>GST</span><b class="tabular" id="resGst">-</b></div>
+            <div class="result-total"><span>Total payable</span><span class="tabular" id="resTotal">-</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- PROFILE ---------- -->
+    <section class="toplevel-view tv-hidden" id="profile-view">
+      <div class="page-wrap">
+        <h1 class="page-title">Profile</h1>
+        <p class="page-sub">Your Metallers account overview.</p>
+        <div class="profile-card">
+          <div class="profile-top">
+            <div class="profile-avatar">MU</div>
+            <div>
+              <div class="profile-name">Metallers User</div>
+              <div class="profile-id">Client ID · MT00219</div>
+              <span class="badge badge-green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                KYC Verified
+              </span>
+            </div>
+          </div>
+          <div class="profile-fields">
+            <div class="field"><span class="field-label">Email</span><span class="field-value">demo.user@metallers.app</span></div>
+            <div class="field"><span class="field-label">Mobile</span><span class="field-value">+91 98••••••10</span></div>
+            <div class="field"><span class="field-label">Segment</span><span class="field-value">Commodity, Currency</span></div>
+            <div class="field"><span class="field-label">Base currency</span><span class="field-value">INR (₹)</span></div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-box"><div class="n">11</div><div class="l">Instruments</div></div>
+            <div class="stat-box"><div class="n">2024</div><div class="l">Member Since</div></div>
+            <div class="stat-box"><div class="n">Dark</div><div class="l">Theme</div></div>
+          </div>
+          <div class="prefs-list">
+            <div class="pref-item"><span class="pn">Price alerts</span><span class="pill">On</span></div>
+            <div class="pref-item"><span class="pn">Auto-refresh interval</span><span class="pill">1.5s</span></div>
+            <div class="pref-item"><span class="pn">Default view</span><span class="pill">Overview grid</span></div>
+          </div>
+          <button class="logout-btn" id="logoutBtn">Log out</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ==========================================================================
+   METALLERS — simulated real-time metal & FX rate terminal
+   ========================================================================== */
+(function(){
+"use strict";
+
+/* ---------------------------------------------------------------------- */
+/* Constants                                                               */
+/* ---------------------------------------------------------------------- */
+var COLORS = { green:"#00d09c", red:"#df514c", blue:"#4184f3", grid:"#2a2a2a", axis:"#5a5a5a" };
+var UNITS_G = { g:1, kg:1000, tola:11.6638, oz:31.1035 };
+var DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+var TF_CONFIG = {
+  "1W":  { points: 84, volMult: 6 },
+  "1M":  { points: 30, volMult: 10 },
+  "1Y":  { points: 52, volMult: 18 },
+  "ALL": { points: 48, volMult: 26 }
+};
+
+/* Candle/line interval options, scoped per range so aggregation always
+   yields a sensible number of bars. bucket = raw points merged per bar. */
+var INTERVAL_OPTIONS = {
+  "1D":  [ { key:"1m",  bucket:1  }, { key:"5m",  bucket:5  }, { key:"15m", bucket:15 }, { key:"30m", bucket:30 } ],
+  "1W":  [ { key:"2H",  bucket:1  }, { key:"6H",  bucket:3  }, { key:"12H", bucket:6  }, { key:"1D",  bucket:12 } ],
+  "1M":  [ { key:"1D",  bucket:1  }, { key:"2D",  bucket:2  }, { key:"1W",  bucket:7  } ],
+  "1Y":  [ { key:"1W",  bucket:1  }, { key:"1M",  bucket:4  }, { key:"1Q",  bucket:13 } ],
+  "ALL": [ { key:"1M",  bucket:1  }, { key:"1Q",  bucket:3  }, { key:"1Y",  bucket:12 } ]
+};
+var INTERVAL_DEFAULT = { "1D":"5m", "1W":"6H", "1M":"1D", "1Y":"1W", "ALL":"1M" };
+
+/* Approximate total span each range covers, used to label the x-axis
+   relative to whatever window is currently zoomed/panned into view. */
+var TF_SPAN = { "1D":{ amount:14, unit:"h" }, "1W":{ amount:7, unit:"d" }, "1M":{ amount:30, unit:"d" }, "1Y":{ amount:12, unit:"mo" }, "ALL":{ amount:5, unit:"y" } };
+
+var MIN_WINDOW_POINTS = 5;
+
+var ICONS = {
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>',
+  chevronLeft: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>'
+};
+
+/* ---------------------------------------------------------------------- */
+/* Instrument definitions                                                  */
+/* ---------------------------------------------------------------------- */
+var INSTRUMENTS = [
+  { id:"usdinr",           group:"fx",     symbol:"USD/INR",           name:"US Dollar / Indian Rupee",   fmt:"num",   decimals:2, base:87.42,   vol:0.0006, drift:0.4 },
+  { id:"silverusd",        group:"fx",     symbol:"SILVER $",          name:"Spot Silver (USD/oz)",       fmt:"usd",   decimals:3, base:38.20,   vol:0.0018, drift:1.1 },
+  { id:"goldusd",          group:"fx",     symbol:"GOLD $",            name:"Spot Gold (USD/oz)",         fmt:"usd",   decimals:2, base:3410.50, vol:0.0012, drift:1.0 },
+
+  { id:"gold9999",         group:"gold",   symbol:"GOLD INR 9999",     name:"24K · 999.9 Purity · 10g",   fmt:"inr",   decimals:0, base:101450,  vol:0.0011, drift:1.0 },
+  { id:"gold995",          group:"gold",   symbol:"GOLD INR 995",      name:"22K · 995 Purity · 10g",     fmt:"inr",   decimals:0, base:100945,  vol:0.0011, drift:1.0 },
+  { id:"gold9999rtgs",     group:"gold",   symbol:"GOLD 9999 RTGS",    name:"RTGS Settlement · 10g",      fmt:"inr",   decimals:0, base:101500,  vol:0.0011, drift:1.0 },
+  { id:"gold9999rtgsgst",  group:"gold",   symbol:"GOLD 9999 RTGS GST",name:"RTGS + 3% GST · 10g",        fmt:"inr",   decimals:0, base:104545,  vol:0.0011, drift:1.0 },
+
+  { id:"silver9999",       group:"silver", symbol:"SILVER INR 9999",   name:"999.9 Purity · 1kg",         fmt:"inr",   decimals:0, base:106900,  vol:0.0017, drift:1.1 },
+  { id:"silver995",        group:"silver", symbol:"SILVER INR 995",    name:"995 Purity · 1kg",           fmt:"inr",   decimals:0, base:106367,  vol:0.0017, drift:1.1 },
+  { id:"silver9999rtgs",   group:"silver", symbol:"SILVER 9999 RTGS",  name:"RTGS Settlement · 1kg",      fmt:"inr",   decimals:0, base:106950,  vol:0.0017, drift:1.1 },
+  { id:"silver9999rtgsgst",group:"silver", symbol:"SILVER 9999 RTGS GST",name:"RTGS + 3% GST · 1kg",      fmt:"inr",   decimals:0, base:110158,  vol:0.0017, drift:1.1 }
+];
+
+var GROUP_LABELS = { fx:"FX & Spot Indices", gold:"Gold Rates (INR)", silver:"Silver Rates (INR)" };
+
+var byId = {};
+INSTRUMENTS.forEach(function(i){ byId[i.id] = i; });
+
+/* ---------------------------------------------------------------------- */
+/* Formatting helpers                                                      */
+/* ---------------------------------------------------------------------- */
+function pad2(n){ return String(n).padStart(2,"0"); }
+
+function formatClock(d){
+  var h = d.getHours(), m = d.getMinutes(), s = d.getSeconds();
+  var ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12; if(h === 0) h = 12;
+  return pad2(h) + ":" + pad2(m) + ":" + pad2(s) + " " + ampm;
+}
+function formatDate(d){
+  return DAYS[d.getDay()] + ", " + d.getDate() + " " + MONTHS[d.getMonth()] + " " + d.getFullYear();
+}
+function formatNumber(n, decimals){
+  return n.toLocaleString("en-IN", { minimumFractionDigits:decimals, maximumFractionDigits:decimals });
+}
+function formatPrice(inst, price){
+  var p = price !== undefined ? price : inst.price;
+  if(inst.fmt === "usd") return "$" + formatNumber(p, inst.decimals);
+  if(inst.fmt === "inr") return "\u20B9" + formatNumber(p, inst.decimals);
+  return formatNumber(p, inst.decimals);
+}
+function formatSigned(n, decimals){
+  var s = n >= 0 ? "+" : "-";
+  return s + formatNumber(Math.abs(n), decimals);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Synthetic data generation                                               */
+/* ---------------------------------------------------------------------- */
+function generateSeries(base, points, vol){
+  var arr = [];
+  var start = base * (1 - (Math.random() * 0.06 - 0.03));
+  var p = start;
+  var now = Date.now();
+  for(var i = 0; i < points; i++){
+    var shock = (Math.random() - 0.5) * vol * 2;
+    p = Math.max(p * (1 + shock), 0.0001);
+    arr.push({ t: now - (points - i) * 60000, p: p });
+  }
+  arr[arr.length - 1].p = base;
+  return arr;
+}
+
+function buildCandles(series, bucketSize){
+  var out = [];
+  for(var i = 0; i < series.length; i += bucketSize){
+    var chunk = series.slice(i, i + bucketSize);
+    if(!chunk.length) continue;
+    var prices = chunk.map(function(x){ return x.p; });
+    out.push({
+      t: chunk[0].t,
+      o: chunk[0].p,
+      c: chunk[chunk.length - 1].p,
+      h: Math.max.apply(null, prices),
+      l: Math.min.apply(null, prices)
+    });
+  }
+  return out;
+}
+
+function initInstrument(inst){
+  inst.price = inst.base;
+  inst.history = generateSeries(inst.base, 60, inst.vol * 3);
+  inst.dayOpen = inst.history[0].p;
+  inst.prevClose = inst.dayOpen * (1 + (Math.random() * 0.01 - 0.005));
+  var histPrices = inst.history.map(function(x){ return x.p; });
+  inst.high = Math.max.apply(null, histPrices);
+  inst.low = Math.min.apply(null, histPrices);
+  inst.staticSeries = {};
+  Object.keys(TF_CONFIG).forEach(function(tf){
+    var cfg = TF_CONFIG[tf];
+    inst.staticSeries[tf] = generateSeries(inst.base, cfg.points, inst.vol * cfg.volMult);
+  });
+  recomputeChange(inst);
+}
+
+function recomputeChange(inst){
+  inst.change = inst.price - inst.prevClose;
+  inst.changePct = (inst.change / inst.prevClose) * 100;
+  var spread = Math.max(inst.price * 0.00035, inst.decimals === 0 ? 1 : 0.001);
+  inst.bid = inst.price - spread;
+  inst.ask = inst.price + spread;
+}
+
+INSTRUMENTS.forEach(initInstrument);
+
+/* ---------------------------------------------------------------------- */
+/* App state                                                               */
+/* ---------------------------------------------------------------------- */
+var state = {
+  currentTab: "dashboard",
+  dashboardMode: "grid",
+  selectedAssetId: null,
+  selectedTf: "1D",
+  selectedChartType: "line",
+  searchQuery: "",
+  calcInstrumentId: "gold9999",
+  intervalByTf: Object.assign({}, INTERVAL_DEFAULT)
+};
+
+var sidebarRefs = {};   // id -> { row, price, change, hi, lo }
+var gridRefs = {};      // id -> { price, change, svg }
+
+/* ---------------------------------------------------------------------- */
+/* Big-chart zoom / pan state                                              */
+/* ---------------------------------------------------------------------- */
+var chartZoom = { widthFrac: 1, startFrac: 1, yZoom: 1 }; // widthFrac: fraction of bars visible (1=all). startFrac: 0=oldest..1=latest edge.
+var lastChartLayout = { len: 0, startIdx: 0, count: 0 };   // updated every render, read by wheel/drag/pinch handlers
+var chartDrag = null;        // { id, startX, startFrac, layout, width }
+var chartPinch = null;       // { startDist, startWidth, layout }
+var activeChartPointers = {}; // pointerId -> {x,y}
+
+/* ---------------------------------------------------------------------- */
+/* Toasts                                                                   */
+/* ---------------------------------------------------------------------- */
+function showToast(msg, type){
+  var container = document.getElementById("toastContainer");
+  var el = document.createElement("div");
+  el.className = "toast" + (type ? " " + type : "");
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(function(){
+    el.classList.add("fade");
+    setTimeout(function(){ el.remove(); }, 260);
+  }, 2200);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Flash helper                                                            */
+/* ---------------------------------------------------------------------- */
+function flash(el, positive){
+  if(!el) return;
+  el.classList.remove("flash-up", "flash-down");
+  void el.offsetWidth;
+  el.classList.add(positive ? "flash-up" : "flash-down");
+}
+
+/* ---------------------------------------------------------------------- */
+/* Zoom / pan math                                                         */
+/* ---------------------------------------------------------------------- */
+function clampNum(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+function aggregateSeries(series, bucketSize){
+  if(bucketSize <= 1) return series;
+  var out = [];
+  for(var i = 0; i < series.length; i += bucketSize){
+    var chunk = series.slice(i, i + bucketSize);
+    if(!chunk.length) continue;
+    out.push({ t: chunk[chunk.length - 1].t, p: chunk[chunk.length - 1].p });
+  }
+  return out;
+}
+
+function minWidthFrac(len){ return Math.min(1, MIN_WINDOW_POINTS / Math.max(1, len)); }
+
+/* Works out which slice of `len` bars is currently visible given chartZoom,
+   and records it in lastChartLayout so wheel/drag/pinch handlers (which fire
+   between renders) know the on-screen bar->pixel mapping. */
+function computeVisibleWindow(len){
+  var count = clampNum(Math.round(len * chartZoom.widthFrac), Math.min(len, MIN_WINDOW_POINTS), Math.max(1, len));
+  var maxStart = Math.max(0, len - count);
+  var startIdx = clampNum(Math.round(chartZoom.startFrac * maxStart), 0, maxStart);
+  lastChartLayout = { len: len, startIdx: startIdx, count: count };
+  return lastChartLayout;
+}
+
+/* Auto-fits price range to the visible data, then applies the Y zoom factor
+   around the vertical center (>1 = zoomed in / clipped, <1 = zoomed out). */
+function computeYRange(prices, yZoom){
+  var min = Math.min.apply(null, prices);
+  var max = Math.max.apply(null, prices);
+  var range = (max - min) || (max * 0.001) || 1;
+  var pad = range * 0.08;
+  min -= pad; max += pad;
+  var center = (min + max) / 2;
+  var half = (max - min) / 2;
+  var factor = yZoom || 1;
+  var dispHalf = half / factor;
+  return { min: center - dispHalf, max: center + dispHalf };
+}
+
+/* Re-centers the X window on `pixelFrac` (0..1 across the chart) while
+   changing to `newWidthFrac`, using a snapshot `layout` of the pre-zoom view. */
+function applyZoomX(newWidthFrac, pixelFrac, layout){
+  layout = layout || lastChartLayout;
+  var len = layout.len || 1;
+  var oldStart = layout.startIdx || 0;
+  var oldCount = layout.count || len;
+  var dataIdx = oldStart + pixelFrac * oldCount;
+
+  var clampedWidth = clampNum(newWidthFrac, minWidthFrac(len), 1);
+  var newCount = clampNum(Math.round(len * clampedWidth), Math.min(len, MIN_WINDOW_POINTS), Math.max(1, len));
+  var newMaxStart = Math.max(0, len - newCount);
+  var newStartIdx = clampNum(dataIdx - pixelFrac * newCount, 0, newMaxStart);
+
+  chartZoom.widthFrac = len > 0 ? newCount / len : 1;
+  chartZoom.startFrac = newMaxStart > 0 ? newStartIdx / newMaxStart : 1;
+}
+
+function zoomBigChartX(factor, pixelFrac){
+  if(!state.selectedAssetId) return;
+  applyZoomX(chartZoom.widthFrac * factor, pixelFrac === undefined ? 0.5 : pixelFrac, lastChartLayout);
+  redrawBigChart();
+}
+
+function zoomBigChartY(factor){
+  if(!state.selectedAssetId) return;
+  chartZoom.yZoom = clampNum(chartZoom.yZoom * factor, 0.25, 10);
+  redrawBigChart();
+}
+
+function resetChartZoom(){
+  chartZoom.widthFrac = 1;
+  chartZoom.startFrac = 1;
+  chartZoom.yZoom = 1;
+}
+
+function updateZoomIndicator(){
+  var el = document.getElementById("zoomIndicator");
+  if(!el) return;
+  var xMult = 1 / (chartZoom.widthFrac || 1);
+  el.textContent = "X " + xMult.toFixed(1) + "x · Y " + chartZoom.yZoom.toFixed(1) + "x";
+}
+
+function formatAgo(amount, unit){
+  if(amount < 0.5) return "Now";
+  var rounded = amount >= 10 ? Math.round(amount) : Math.round(amount * 10) / 10;
+  if(rounded <= 0) return "Now";
+  return rounded + unit + " ago";
+}
+
+/* Labels the x-axis relative to whatever window is presently zoomed/panned
+   into view, instead of always describing the full range. */
+function updateAxisLabels(){
+  var axisEl = document.getElementById("chartAxisX");
+  if(!axisEl) return;
+  var span = TF_SPAN[state.selectedTf];
+  if(!span){
+    axisEl.innerHTML = "<span>9:00 AM</span><span>3:00 PM</span><span>Now</span>";
+    return;
+  }
+  var len = lastChartLayout.len || 1;
+  var totalSpan = Math.max(1, len - 1);
+  var startFrac = len > 1 ? lastChartLayout.startIdx / totalSpan : 0;
+  var endFrac = len > 1 ? (lastChartLayout.startIdx + lastChartLayout.count - 1) / totalSpan : 1;
+  var midFrac = (startFrac + endFrac) / 2;
+  var labels = [
+    formatAgo(span.amount * (1 - startFrac), span.unit),
+    formatAgo(span.amount * (1 - midFrac), span.unit),
+    formatAgo(span.amount * (1 - endFrac), span.unit)
+  ];
+  axisEl.innerHTML = "<span>" + labels[0] + "</span><span>" + labels[1] + "</span><span>" + labels[2] + "</span>";
+}
+
+/* ---------------------------------------------------------------------- */
+/* SVG chart drawing                                                       */
+/* ---------------------------------------------------------------------- */
+function seriesPath(series, w, h, padTop, padBottom, yRange){
+  var min = yRange.min, max = yRange.max;
+  var range = (max - min) || 1;
+  var stepX = w / ((series.length - 1) || 1);
+  var d = "";
+  for(var i = 0; i < series.length; i++){
+    var x = i * stepX;
+    var y = padTop + (1 - (series[i].p - min) / range) * (h - padTop - padBottom);
+    d += (i === 0 ? "M" : "L") + x.toFixed(2) + "," + y.toFixed(2) + " ";
+  }
+  return { d: d, min: min, max: max, lastX: (series.length - 1) * stepX };
+}
+
+function renderSparkline(svg, series, positive){
+  var w = 300, h = 100;
+  var yRange = computeYRange(series.map(function(x){ return x.p; }), 1);
+  var res = seriesPath(series, w, h, 6, 6, yRange);
+  var color = positive ? COLORS.green : COLORS.red;
+  var areaD = res.d + "L" + w + "," + h + " L0," + h + " Z";
+  var gid = "sg" + Math.random().toString(36).slice(2, 8);
+  svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+  svg.innerHTML =
+    '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="' + color + '" stop-opacity="0.35"/>' +
+    '<stop offset="100%" stop-color="' + color + '" stop-opacity="0"/>' +
+    '</linearGradient></defs>' +
+    '<path d="' + areaD + '" fill="url(#' + gid + ')" stroke="none"/>' +
+    '<path d="' + res.d + '" fill="none" stroke="' + color + '" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>';
+}
+
+function renderBigLine(svg, fullSeries, positive){
+  var vb = svg.viewBox.baseVal;
+  var w = vb.width || 1000, h = vb.height || 380;
+  var padTop = 24, padBottom = 30;
+
+  var win = computeVisibleWindow(fullSeries.length);
+  var series = fullSeries.slice(win.startIdx, win.startIdx + win.count);
+  if(series.length < 2) series = fullSeries.slice(-2);
+  if(series.length < 1) return;
+
+  var yRange = computeYRange(series.map(function(x){ return x.p; }), chartZoom.yZoom);
+  var res = seriesPath(series, w, h, padTop, padBottom, yRange);
+  var color = positive ? COLORS.green : COLORS.red;
+  var areaD = res.d + "L" + w + "," + h + " L0," + h + " Z";
+  var gid = "bg" + Math.random().toString(36).slice(2, 8);
+
+  var gridLines = "";
+  var rows = 4;
+  for(var r = 0; r <= rows; r++){
+    var gy = padTop + (r / rows) * (h - padTop - padBottom);
+    var priceAtY = res.max - (r / rows) * (res.max - res.min);
+    gridLines += '<line x1="0" y1="' + gy.toFixed(1) + '" x2="' + w + '" y2="' + gy.toFixed(1) + '" stroke="' + COLORS.grid + '" stroke-width="1"/>';
+    gridLines += '<text x="' + (w - 6) + '" y="' + (gy - 4).toFixed(1) + '" fill="' + COLORS.axis + '" font-size="11" text-anchor="end">' + formatNumber(priceAtY, priceAtY > 1000 ? 0 : 2) + '</text>';
+  }
+
+  svg.innerHTML =
+    '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="' + color + '" stop-opacity="0.28"/>' +
+    '<stop offset="100%" stop-color="' + color + '" stop-opacity="0"/>' +
+    '</linearGradient></defs>' +
+    gridLines +
+    '<path d="' + areaD + '" fill="url(#' + gid + ')" stroke="none"/>' +
+    '<path d="' + res.d + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+    '<circle cx="' + res.lastX.toFixed(2) + '" cy="' + (padTop + (1 - (series[series.length-1].p - res.min) / ((res.max-res.min)||1)) * (h - padTop - padBottom)).toFixed(2) + '" r="3.5" fill="' + color + '"/>';
+}
+
+function renderBigCandles(svg, fullCandles){
+  var vb = svg.viewBox.baseVal;
+  var w = vb.width || 1000, h = vb.height || 380;
+  var padTop = 24, padBottom = 30;
+  var innerH = h - padTop - padBottom;
+
+  var win = computeVisibleWindow(fullCandles.length);
+  var candles = fullCandles.slice(win.startIdx, win.startIdx + win.count);
+  if(!candles.length) return;
+
+  var highs = candles.map(function(c){ return c.h; });
+  var lows = candles.map(function(c){ return c.l; });
+  var yRange = computeYRange(highs.concat(lows), chartZoom.yZoom);
+  var min = yRange.min, max = yRange.max;
+  var range = (max - min) || 1;
+  var slot = w / candles.length;
+  var bodyW = Math.max(2, slot * 0.58);
+
+  function yOf(price){ return padTop + (1 - (price - min) / range) * innerH; }
+
+  var gridLines = "";
+  var rows = 4;
+  for(var r = 0; r <= rows; r++){
+    var gy = padTop + (r / rows) * innerH;
+    var priceAtY = max - (r / rows) * (max - min);
+    gridLines += '<line x1="0" y1="' + gy.toFixed(1) + '" x2="' + w + '" y2="' + gy.toFixed(1) + '" stroke="' + COLORS.grid + '" stroke-width="1"/>';
+    gridLines += '<text x="' + (w - 6) + '" y="' + (gy - 4).toFixed(1) + '" fill="' + COLORS.axis + '" font-size="11" text-anchor="end">' + formatNumber(priceAtY, priceAtY > 1000 ? 0 : 2) + '</text>';
+  }
+
+  var body = "";
+  candles.forEach(function(c, i){
+    var x = i * slot + slot / 2;
+    var yO = yOf(c.o), yC = yOf(c.c), yH = yOf(c.h), yL = yOf(c.l);
+    var up = c.c >= c.o;
+    var color = up ? COLORS.green : COLORS.red;
+    var top = Math.min(yO, yC), bh = Math.max(1, Math.abs(yC - yO));
+    body += '<line x1="' + x.toFixed(2) + '" y1="' + yH.toFixed(2) + '" x2="' + x.toFixed(2) + '" y2="' + yL.toFixed(2) + '" stroke="' + color + '" stroke-width="1"/>';
+    body += '<rect x="' + (x - bodyW / 2).toFixed(2) + '" y="' + top.toFixed(2) + '" width="' + bodyW.toFixed(2) + '" height="' + bh.toFixed(2) + '" fill="' + color + '"/>';
+  });
+
+  svg.innerHTML = gridLines + body;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Sidebar (watchlist) rendering                                           */
+/* ---------------------------------------------------------------------- */
+function buildWatchlist(){
+  var container = document.getElementById("watchlist");
+  container.innerHTML = "";
+  sidebarRefs = {};
+  var q = state.searchQuery.trim().toLowerCase();
+  var lastGroup = null;
+
+  INSTRUMENTS.forEach(function(inst){
+    if(q && inst.symbol.toLowerCase().indexOf(q) === -1 && inst.name.toLowerCase().indexOf(q) === -1) return;
+
+    if(inst.group !== lastGroup){
+      var label = document.createElement("div");
+      label.className = "w-group-label";
+      label.textContent = GROUP_LABELS[inst.group];
+      container.appendChild(label);
+      lastGroup = inst.group;
+    }
+
+    var row = document.createElement("div");
+    row.className = "w-row";
+    row.dataset.id = inst.id;
+    row.innerHTML =
+      '<div class="w-main">' +
+        '<div class="w-name">' +
+          '<span class="w-symbol">' + inst.symbol + '</span>' +
+          '<span class="w-sub">' + inst.name + '</span>' +
+        '</div>' +
+        '<div class="w-price-block">' +
+          '<span class="w-price tabular" data-el="price">' + formatPrice(inst) + '</span>' +
+          '<span class="w-change tabular" data-el="change"></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="w-actions">' +
+        '<div class="w-action-btns">' +
+          '<button class="act-btn chart-icon" title="View chart">' + ICONS.chart + '</button>' +
+          '<button class="act-btn buy-btn" title="Buy">B</button>' +
+          '<button class="act-btn sell-btn" title="Sell">S</button>' +
+        '</div>' +
+        '<div class="w-hl">' +
+          '<span>H <b class="hi tabular" data-el="hi"></b></span>' +
+          '<span>L <b class="lo tabular" data-el="lo"></b></span>' +
+        '</div>' +
+      '</div>';
+    container.appendChild(row);
+
+    sidebarRefs[inst.id] = {
+      row: row,
+      price: row.querySelector('[data-el="price"]'),
+      change: row.querySelector('[data-el="change"]'),
+      hi: row.querySelector('[data-el="hi"]'),
+      lo: row.querySelector('[data-el="lo"]')
+    };
+    updateSidebarRow(inst, false);
+  });
+}
+
+function updateSidebarRow(inst, animate){
+  var refs = sidebarRefs[inst.id];
+  if(!refs) return;
+  var positive = inst.change >= 0;
+  refs.price.textContent = formatPrice(inst);
+  refs.change.textContent = formatSigned(inst.change, inst.decimals) + " (" + formatSigned(inst.changePct, 2) + "%)";
+  refs.change.className = "w-change tabular " + (positive ? "pos" : "neg");
+  refs.hi.textContent = formatPrice(inst, inst.high);
+  refs.lo.textContent = formatPrice(inst, inst.low);
+  refs.row.classList.toggle("selected", state.selectedAssetId === inst.id);
+  if(animate) flash(refs.price, positive);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Overview grid rendering                                                 */
+/* ---------------------------------------------------------------------- */
+var GRID_ASSET_IDS = ["usdinr", "goldusd", "silverusd", "gold9999", "silver9999"];
+
+function buildOverviewGrid(){
+  var grid = document.getElementById("overviewGrid");
+  grid.innerHTML = "";
+  gridRefs = {};
+
+  var clockCard = document.createElement("div");
+  clockCard.className = "grid-card clock-card";
+  clockCard.innerHTML =
+    '<div class="gc-title">Market Overview</div>' +
+    '<div class="clock-card-time tabular" id="gcClockTime">--:--:--</div>' +
+    '<div class="clock-card-date" id="gcClockDate">-</div>' +
+    '<div class="clock-session"><span class="status-dot" id="gcStatusDot"></span><span id="gcStatusText">-</span></div>' +
+    '<div class="clock-mini-stats" id="gcMiniStats"></div>';
+  grid.appendChild(clockCard);
+
+  var miniStats = clockCard.querySelector("#gcMiniStats");
+  ["usdinr", "goldusd", "silverusd"].forEach(function(id){
+    var inst = byId[id];
+    var row = document.createElement("div");
+    row.className = "cms-row";
+    row.innerHTML = '<span class="cms-name">' + inst.symbol + '</span><span class="cms-val tabular" data-mini="' + id + '"></span>';
+    miniStats.appendChild(row);
+  });
+
+  var titles = {
+    usdinr: "USD / INR", goldusd: "Gold / USD", silverusd: "Silver / USD",
+    gold9999: "Gold / INR", silver9999: "Silver / INR"
+  };
+
+  GRID_ASSET_IDS.forEach(function(id){
+    var inst = byId[id];
+    var card = document.createElement("div");
+    card.className = "grid-card";
+    card.dataset.id = id;
+    card.innerHTML =
+      '<div class="grid-card-header">' +
+        '<div>' +
+          '<div class="gc-title">' + titles[id] + '</div>' +
+          '<div class="gc-price tabular" data-el="price">' + formatPrice(inst) + '</div>' +
+          '<div class="gc-change tabular" data-el="change"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="grid-chart-wrap"><svg></svg></div>';
+    grid.appendChild(card);
+
+    gridRefs[id] = {
+      price: card.querySelector('[data-el="price"]'),
+      change: card.querySelector('[data-el="change"]'),
+      svg: card.querySelector("svg")
+    };
+    updateGridCard(inst, false);
+  });
+
+  updateClockCard();
+}
+
+function updateGridCard(inst, animate){
+  var refs = gridRefs[inst.id];
+  if(!refs) return;
+  var positive = inst.change >= 0;
+  refs.price.textContent = formatPrice(inst);
+  refs.change.textContent = formatSigned(inst.change, inst.decimals) + " (" + formatSigned(inst.changePct, 2) + "%)";
+  refs.change.className = "gc-change tabular " + (positive ? "pos" : "neg");
+  renderSparkline(refs.svg, inst.history.slice(-60), positive);
+  if(animate) flash(refs.price, positive);
+
+  var mini = document.querySelector('[data-mini="' + inst.id + '"]');
+  if(mini){
+    mini.textContent = formatPrice(inst);
+    mini.className = "cms-val tabular " + (positive ? "pos" : "neg");
+  }
+}
+
+function updateClockCard(){
+  var now = new Date();
+  var timeEl = document.getElementById("gcClockTime");
+  var dateEl = document.getElementById("gcClockDate");
+  var dotEl = document.getElementById("gcStatusDot");
+  var statusEl = document.getElementById("gcStatusText");
+  if(!timeEl) return;
+  timeEl.textContent = formatClock(now);
+  dateEl.textContent = formatDate(now);
+  var h = now.getHours();
+  var live = h >= 9 && h < 23;
+  dotEl.classList.toggle("off", !live);
+  statusEl.textContent = live ? "Bullion Market Live" : "Market Closed";
+}
+
+/* ---------------------------------------------------------------------- */
+/* Full chart view rendering                                               */
+/* ---------------------------------------------------------------------- */
+function getRawSeriesForTf(inst, tf){
+  return tf === "1D" ? inst.history : inst.staticSeries[tf];
+}
+function getCurrentBucket(){
+  var opts = INTERVAL_OPTIONS[state.selectedTf] || [];
+  var activeKey = state.intervalByTf[state.selectedTf];
+  var match = opts.filter(function(o){ return o.key === activeKey; })[0];
+  return match ? match.bucket : 1;
+}
+function getSeriesForTf(inst, tf){
+  return aggregateSeries(getRawSeriesForTf(inst, tf), getCurrentBucket());
+}
+function getCandlesForTf(inst, tf){
+  return buildCandles(getRawSeriesForTf(inst, tf), getCurrentBucket());
+}
+
+function renderIntervalButtons(){
+  var el = document.getElementById("ivButtons");
+  if(!el) return;
+  var tf = state.selectedTf;
+  var opts = INTERVAL_OPTIONS[tf] || [];
+  var activeKey = state.intervalByTf[tf];
+  el.innerHTML = opts.map(function(o){
+    return '<button class="iv-btn' + (o.key === activeKey ? " active" : "") + '" data-iv="' + o.key + '">' + o.key + '</button>';
+  }).join("");
+}
+
+function renderChartView(){
+  var inst = byId[state.selectedAssetId];
+  if(!inst) return;
+  var positive = inst.change >= 0;
+
+  renderIntervalButtons();
+
+  document.getElementById("chartSymbol").textContent = inst.symbol;
+  document.getElementById("chartName").textContent = inst.name;
+  document.getElementById("chartPrice").textContent = formatPrice(inst);
+  var changeEl = document.getElementById("chartChange");
+  changeEl.textContent = formatSigned(inst.change, inst.decimals) + " (" + formatSigned(inst.changePct, 2) + "%) today";
+  changeEl.className = "chart-change tabular " + (positive ? "pos" : "neg");
+
+  var statsHtml = "";
+  function stat(label, val){
+    statsHtml += '<div class="stat-item"><span class="stat-label">' + label + '</span><span class="stat-value tabular">' + val + '</span></div>';
+  }
+  stat("Bid", formatPrice(inst, inst.bid));
+  stat("Ask", formatPrice(inst, inst.ask));
+  stat("Day High", formatPrice(inst, inst.high));
+  stat("Day Low", formatPrice(inst, inst.low));
+  stat("Prev. Close", formatPrice(inst, inst.prevClose));
+  document.getElementById("chartStats").innerHTML = statsHtml;
+
+  redrawBigChart();
+}
+
+function redrawBigChart(){
+  var inst = byId[state.selectedAssetId];
+  if(!inst) return;
+  var svg = document.getElementById("bigChartSvg");
+  var positive = inst.change >= 0;
+  if(state.selectedChartType === "line"){
+    renderBigLine(svg, getSeriesForTf(inst, state.selectedTf), positive);
+  } else {
+    renderBigCandles(svg, getCandlesForTf(inst, state.selectedTf));
+  }
+  updateAxisLabels();
+  updateZoomIndicator();
+}
+
+/* ---------------------------------------------------------------------- */
+/* View / mode switching                                                   */
+/* ---------------------------------------------------------------------- */
+function selectAsset(id){
+  if(!byId[id]) return;
+  state.selectedAssetId = id;
+  state.dashboardMode = "chart";
+  state.selectedTf = "1D";
+  state.selectedChartType = "line";
+  resetChartZoom();
+
+  document.getElementById("grid-view").classList.add("panel-hidden");
+  document.getElementById("chart-view").classList.remove("panel-hidden");
+
+  document.querySelectorAll("#tfButtons .tf-btn").forEach(function(b){ b.classList.toggle("active", b.dataset.tf === "1D"); });
+  document.querySelectorAll("#ctButtons .ct-btn").forEach(function(b){ b.classList.toggle("active", b.dataset.ct === "line"); });
+
+  Object.keys(sidebarRefs).forEach(function(k){ sidebarRefs[k].row.classList.toggle("selected", k === id); });
+
+  renderChartView();
+}
+
+function showGrid(){
+  state.dashboardMode = "grid";
+  state.selectedAssetId = null;
+  document.getElementById("chart-view").classList.add("panel-hidden");
+  document.getElementById("grid-view").classList.remove("panel-hidden");
+  Object.keys(sidebarRefs).forEach(function(k){ sidebarRefs[k].row.classList.remove("selected"); });
+}
+
+function switchTab(tab){
+  var wasActive = state.currentTab === tab;
+  state.currentTab = tab;
+  document.querySelectorAll(".navtab").forEach(function(b){ b.classList.toggle("active", b.dataset.tab === tab); });
+  ["dashboard", "calculator", "profile"].forEach(function(t){
+    document.getElementById(t + "-view").classList.toggle("tv-hidden", t !== tab);
+  });
+  if(tab === "dashboard" && wasActive){
+    showGrid();
+  }
+  if(tab === "calculator"){
+    computeCalculator();
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Header clock                                                            */
+/* ---------------------------------------------------------------------- */
+function tickClock(){
+  var now = new Date();
+  document.getElementById("headerClock").textContent = formatClock(now);
+  document.getElementById("headerDateText").textContent = formatDate(now);
+  var h = now.getHours();
+  var live = h >= 9 && h < 23;
+  document.getElementById("headerStatusDot").classList.toggle("off", !live);
+  if(state.currentTab === "dashboard" && state.dashboardMode === "grid"){
+    updateClockCard();
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Calculator                                                              */
+/* ---------------------------------------------------------------------- */
+var RATE_TYPE_OPTIONS = {
+  "9999": [
+    { value:"gold9999",          label:"Standard" },
+    { value:"gold9999rtgs",      label:"RTGS Settlement" },
+    { value:"gold9999rtgsgst",   label:"RTGS + 3% GST" }
+  ],
+  "995": [
+    { value:"gold995", label:"Standard" }
+  ]
+};
+var RATE_TYPE_OPTIONS_SILVER = {
+  "9999": [
+    { value:"silver9999",        label:"Standard" },
+    { value:"silver9999rtgs",    label:"RTGS Settlement" },
+    { value:"silver9999rtgsgst", label:"RTGS + 3% GST" }
+  ],
+  "995": [
+    { value:"silver995", label:"Standard" }
+  ]
+};
+
+function refreshRateTypeOptions(){
+  var metal = document.getElementById("calcMetal").value;
+  var purity = document.getElementById("calcPurity").value;
+  var options = (metal === "gold" ? RATE_TYPE_OPTIONS : RATE_TYPE_OPTIONS_SILVER)[purity];
+  var sel = document.getElementById("calcRateType");
+  sel.innerHTML = options.map(function(o){ return '<option value="' + o.value + '">' + o.label + '</option>'; }).join("");
+  state.calcInstrumentId = options[0].value;
+}
+
+function computeCalculator(){
+  var metal = document.getElementById("calcMetal").value;
+  var weight = parseFloat(document.getElementById("calcWeight").value) || 0;
+  var unit = document.getElementById("calcUnit").value;
+  var making = parseFloat(document.getElementById("calcMaking").value) || 0;
+  var addGst = document.getElementById("calcGst").checked;
+  var instId = document.getElementById("calcRateType").value;
+  state.calcInstrumentId = instId;
+  var inst = byId[instId];
+  if(!inst) return;
+
+  var weightG = weight * (UNITS_G[unit] || 1);
+  var perUnitG = metal === "gold" ? 10 : 1000;
+  var baseValue = (weightG / perUnitG) * inst.price;
+  var makingAmt = baseValue * (making / 100);
+  var gstAmt = addGst ? (baseValue + makingAmt) * 0.03 : 0;
+  var total = baseValue + makingAmt + gstAmt;
+
+  document.getElementById("calcRateLabel").textContent = "Live rate · " + inst.symbol;
+  document.getElementById("calcRateValue").textContent = formatPrice(inst);
+  document.getElementById("resRate").textContent = formatPrice(inst) + " " + (metal === "gold" ? "/10g" : "/kg");
+  document.getElementById("resBase").textContent = "\u20B9" + formatNumber(baseValue, 2);
+  document.getElementById("resMaking").textContent = "\u20B9" + formatNumber(makingAmt, 2);
+  document.getElementById("resGst").textContent = "\u20B9" + formatNumber(gstAmt, 2);
+  document.getElementById("resTotal").textContent = "\u20B9" + formatNumber(total, 2);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Real-time tick                                                          */
+/* ---------------------------------------------------------------------- */
+var marketDrift = 0;
+
+function tick(){
+  marketDrift += (Math.random() - 0.5) * 0.0004;
+  marketDrift = Math.max(-0.002, Math.min(0.002, marketDrift * 0.9));
+
+  INSTRUMENTS.forEach(function(inst){
+    var shock = (Math.random() - 0.5) * inst.vol * 2 + marketDrift * inst.drift;
+    var newPrice = Math.max(inst.price * (1 + shock), 0.0001);
+    inst.price = newPrice;
+    inst.high = Math.max(inst.high, newPrice);
+    inst.low = Math.min(inst.low, newPrice);
+    recomputeChange(inst);
+
+    inst.history.push({ t: Date.now(), p: newPrice });
+    if(inst.history.length > 180) inst.history.shift();
+
+    if(state.currentTab === "dashboard"){
+      if(sidebarRefs[inst.id]) updateSidebarRow(inst, true);
+      if(state.dashboardMode === "grid" && gridRefs[inst.id]) updateGridCard(inst, true);
+      if(state.dashboardMode === "chart" && state.selectedAssetId === inst.id && state.selectedTf === "1D"){
+        document.getElementById("chartPrice").textContent = formatPrice(inst);
+        flash(document.getElementById("chartPrice"), inst.change >= 0);
+        var changeEl = document.getElementById("chartChange");
+        changeEl.textContent = formatSigned(inst.change, inst.decimals) + " (" + formatSigned(inst.changePct, 2) + "%) today";
+        changeEl.className = "chart-change tabular " + (inst.change >= 0 ? "pos" : "neg");
+        redrawBigChart();
+      }
+    }
+  });
+
+  if(state.currentTab === "calculator") computeCalculator();
+}
+
+/* ---------------------------------------------------------------------- */
+/* Big-chart interactions: wheel zoom, drag pan, double-click reset         */
+/* ---------------------------------------------------------------------- */
+function wireChartInteractions(){
+  var wrap = document.getElementById("chartCanvasWrap");
+  if(!wrap) return;
+
+  function pixelFracFromClientX(clientX){
+    var rect = wrap.getBoundingClientRect();
+    if(!rect.width) return 0.5;
+    return clampNum((clientX - rect.left) / rect.width, 0, 1);
+  }
+  function pointersArray(){
+    return Object.keys(activeChartPointers).map(function(k){ return activeChartPointers[k]; });
+  }
+
+  wrap.addEventListener("wheel", function(e){
+    if(!state.selectedAssetId) return;
+    e.preventDefault();
+    var pf = pixelFracFromClientX(e.clientX);
+    var zoomIn = e.deltaY < 0;
+    if(e.shiftKey){
+      zoomBigChartY(zoomIn ? 1.2 : 1 / 1.2);
+    } else {
+      zoomBigChartX(zoomIn ? 0.85 : 1 / 0.85, pf);
+    }
+  }, { passive: false });
+
+  wrap.addEventListener("dblclick", function(){
+    if(!state.selectedAssetId) return;
+    resetChartZoom();
+    redrawBigChart();
+  });
+
+  wrap.addEventListener("pointerdown", function(e){
+    if(!state.selectedAssetId) return;
+    if(e.pointerType === "mouse" && e.button !== 0) return;
+    wrap.setPointerCapture(e.pointerId);
+    activeChartPointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    var pts = pointersArray();
+    if(pts.length >= 2){
+      chartDrag = null;
+      wrap.classList.remove("dragging");
+      var dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      chartPinch = { startDist: dist || 1, startWidth: chartZoom.widthFrac, layout: Object.assign({}, lastChartLayout) };
+    } else {
+      chartPinch = null;
+      chartDrag = {
+        id: e.pointerId,
+        startX: e.clientX,
+        startFrac: chartZoom.startFrac,
+        layout: Object.assign({}, lastChartLayout),
+        width: wrap.getBoundingClientRect().width || 1
+      };
+      wrap.classList.add("dragging");
+    }
+  });
+
+  wrap.addEventListener("pointermove", function(e){
+    if(!(e.pointerId in activeChartPointers)) return;
+    activeChartPointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    var pts = pointersArray();
+
+    if(pts.length >= 2 && chartPinch){
+      var dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      var ratio = dist / (chartPinch.startDist || 1);
+      var midX = (pts[0].x + pts[1].x) / 2;
+      var pf = pixelFracFromClientX(midX);
+      applyZoomX(chartPinch.startWidth / (ratio || 1), pf, chartPinch.layout);
+      redrawBigChart();
+      return;
+    }
+
+    if(chartDrag && chartDrag.id === e.pointerId){
+      var layout = chartDrag.layout;
+      var maxStart = Math.max(0, layout.len - layout.count);
+      if(maxStart <= 0) return;
+      var dx = e.clientX - chartDrag.startX;
+      var deltaIdx = -(dx / chartDrag.width) * layout.count;
+      var newStartIdx = clampNum(chartDrag.startFrac * maxStart + deltaIdx, 0, maxStart);
+      chartZoom.startFrac = newStartIdx / maxStart;
+      redrawBigChart();
+    }
+  });
+
+  function releasePointer(e){
+    delete activeChartPointers[e.pointerId];
+    var pts = pointersArray();
+    if(pts.length < 2) chartPinch = null;
+    if(chartDrag && chartDrag.id === e.pointerId){
+      chartDrag = null;
+      wrap.classList.remove("dragging");
+    }
+  }
+  wrap.addEventListener("pointerup", releasePointer);
+  wrap.addEventListener("pointercancel", releasePointer);
+  wrap.addEventListener("pointerleave", function(e){
+    if(pointersArray().length <= 1) releasePointer(e);
+  });
+}
+
+/* ---------------------------------------------------------------------- */
+/* Event wiring                                                            */
+/* ---------------------------------------------------------------------- */
+function wireEvents(){
+  document.getElementById("navtabs").addEventListener("click", function(e){
+    var btn = e.target.closest(".navtab");
+    if(!btn) return;
+    switchTab(btn.dataset.tab);
+  });
+
+  document.getElementById("watchlist").addEventListener("click", function(e){
+    var row = e.target.closest(".w-row");
+    if(!row) return;
+    var id = row.dataset.id;
+
+    if(e.target.closest(".buy-btn")){
+      e.stopPropagation();
+      showToast("Buy order placeholder — " + byId[id].symbol, "buy");
+      return;
+    }
+    if(e.target.closest(".sell-btn")){
+      e.stopPropagation();
+      showToast("Sell order placeholder — " + byId[id].symbol, "sell");
+      return;
+    }
+    selectAsset(id);
+  });
+
+  document.getElementById("overviewGrid").addEventListener("click", function(e){
+    var card = e.target.closest(".grid-card");
+    if(!card || !card.dataset.id) return;
+    selectAsset(card.dataset.id);
+  });
+
+  document.getElementById("backToGridBtn").addEventListener("click", showGrid);
+
+  document.getElementById("tfButtons").addEventListener("click", function(e){
+    var btn = e.target.closest(".tf-btn");
+    if(!btn) return;
+    state.selectedTf = btn.dataset.tf;
+    document.querySelectorAll("#tfButtons .tf-btn").forEach(function(b){ b.classList.toggle("active", b === btn); });
+    resetChartZoom();
+    renderChartView();
+  });
+
+  document.getElementById("ivButtons").addEventListener("click", function(e){
+    var btn = e.target.closest(".iv-btn");
+    if(!btn) return;
+    state.intervalByTf[state.selectedTf] = btn.dataset.iv;
+    document.querySelectorAll("#ivButtons .iv-btn").forEach(function(b){ b.classList.toggle("active", b === btn); });
+    resetChartZoom();
+    redrawBigChart();
+  });
+
+  document.getElementById("ctButtons").addEventListener("click", function(e){
+    var btn = e.target.closest(".ct-btn");
+    if(!btn) return;
+    state.selectedChartType = btn.dataset.ct;
+    document.querySelectorAll("#ctButtons .ct-btn").forEach(function(b){ b.classList.toggle("active", b === btn); });
+    redrawBigChart();
+  });
+
+  document.getElementById("zoomButtons").addEventListener("click", function(e){
+    var btn = e.target.closest(".zoom-btn");
+    if(!btn || !state.selectedAssetId) return;
+    var action = btn.dataset.zoom;
+    if(action === "xin") zoomBigChartX(0.7, 0.5);
+    else if(action === "xout") zoomBigChartX(1 / 0.7, 0.5);
+    else if(action === "yin") zoomBigChartY(1.35);
+    else if(action === "yout") zoomBigChartY(1 / 1.35);
+    else if(action === "reset"){ resetChartZoom(); redrawBigChart(); }
+  });
+
+  wireChartInteractions();
+
+  var searchInput = document.getElementById("searchInput");
+  searchInput.addEventListener("input", function(e){
+    state.searchQuery = e.target.value;
+    buildWatchlist();
+  });
+
+  document.addEventListener("keydown", function(e){
+    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k"){
+      e.preventDefault();
+      if(state.currentTab !== "dashboard") switchTab("dashboard");
+      searchInput.focus();
+      searchInput.select();
+    }
+  });
+
+  ["calcMetal", "calcPurity"].forEach(function(id){
+    document.getElementById(id).addEventListener("change", function(){
+      refreshRateTypeOptions();
+      computeCalculator();
+    });
+  });
+  ["calcRateType", "calcWeight", "calcUnit", "calcMaking", "calcGst"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", computeCalculator);
+    document.getElementById(id).addEventListener("change", computeCalculator);
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", function(){
+    showToast("This is a demo account — logout is disabled.");
+  });
+}
+
+/* ---------------------------------------------------------------------- */
+/* Init                                                                     */
+/* ---------------------------------------------------------------------- */
+function init(){
+  buildWatchlist();
+  buildOverviewGrid();
+  refreshRateTypeOptions();
+  computeCalculator();
+  wireEvents();
+  tickClock();
+  setInterval(tickClock, 1000);
+  setInterval(tick, 1500);
+}
+
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+
+})();
+
+</script>
+</body>
+</html>
