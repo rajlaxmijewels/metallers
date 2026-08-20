@@ -307,6 +307,83 @@
   }
   .result-total span:last-child{color:var(--green);}
 
+  .calc-actions{margin-top:16px;display:flex;justify-content:flex-end;}
+  .calc-save-btn{
+    padding:9px 16px;border-radius:var(--radius-md);background:var(--green-dim);border:1px solid rgba(0,208,156,.35);
+    color:var(--green);font-weight:700;font-size:12.5px;transition:all .15s ease;
+  }
+  .calc-save-btn:hover{background:var(--green);color:#0d0d0d;}
+
+  .calc-page-wrap{max-width:800px;}
+  .calc-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .calc-tools{display:flex;gap:8px;flex:0 0 auto;padding-top:2px;}
+  .calc-tool-btn{
+    display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:var(--radius-md);
+    background:var(--panel);border:1px solid var(--border);color:var(--text-secondary);font-weight:600;font-size:12px;
+    transition:all .15s ease;
+  }
+  .calc-tool-btn:hover{border-color:var(--blue);color:var(--text-primary);}
+  .calc-badge{
+    background:var(--blue);color:#fff;border-radius:20px;font-size:10px;font-weight:700;
+    padding:1px 6px;min-width:16px;text-align:center;line-height:1.5;
+  }
+
+  .calc-subtabs{display:flex;gap:4px;margin:18px 0;background:var(--panel-soft);padding:3px;border-radius:var(--radius-md);border:1px solid var(--border);width:fit-content;max-width:100%;overflow-x:auto;}
+  .calc-subtab{padding:8px 16px;border-radius:4px;background:transparent;border:none;color:var(--text-secondary);font-size:12.5px;font-weight:600;transition:all .12s ease;white-space:nowrap;}
+  .calc-subtab:hover{color:var(--text-primary);}
+  .calc-subtab.active{background:var(--blue);color:#fff;}
+
+  .calc-panel-hidden{display:none;}
+
+  .uom-toggle{display:flex;gap:4px;background:var(--panel-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px;width:fit-content;}
+  .uom-btn{padding:6px 13px;border-radius:3px;background:transparent;border:none;color:var(--text-secondary);font-size:11.5px;font-weight:600;transition:all .12s ease;}
+  .uom-btn.active{background:var(--blue);color:#fff;}
+
+  .rate-live-row{display:flex;align-items:center;gap:10px;}
+  .rate-live-row input[type=number]{flex:1;min-width:0;}
+  .rate-live-row input[type=number]:disabled{opacity:.6;cursor:not-allowed;}
+  .live-check{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-secondary);white-space:nowrap;font-weight:500;flex:0 0 auto;}
+  .live-check input{accent-color:var(--blue);}
+  .form-field input[type=number]:disabled{opacity:.6;cursor:not-allowed;}
+
+  /* ---------- MODALS (History / Saved products) ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;
+    z-index:200;padding:20px;
+  }
+  .modal-hidden{display:none;}
+  .modal-card{
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-md);
+    width:100%;max-width:440px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .modal-head{
+    flex:0 0 auto;padding:14px 16px;border-bottom:1px solid var(--border-soft);display:flex;
+    align-items:center;justify-content:space-between;font-weight:700;font-size:14px;
+  }
+  .modal-close{width:26px;height:26px;border-radius:var(--radius-sm);background:transparent;border:1px solid var(--border);color:var(--text-secondary);font-size:15px;line-height:1;}
+  .modal-close:hover{color:var(--text-primary);border-color:var(--blue);}
+  .modal-body{flex:1;overflow-y:auto;padding:4px 12px;}
+  .modal-empty{padding:34px 10px;text-align:center;color:var(--text-tertiary);font-size:12.5px;}
+  .modal-foot{flex:0 0 auto;padding:12px 16px;border-top:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .modal-btn-secondary{padding:7px 13px;border-radius:var(--radius-sm);background:transparent;border:1px solid rgba(223,81,76,.35);color:var(--red);font-weight:600;font-size:11.5px;white-space:nowrap;}
+  .modal-btn-secondary:hover{background:var(--red-dim);border-color:var(--red);}
+  .saved-sum{font-size:12.5px;color:var(--text-secondary);}
+  .saved-sum b{color:var(--green);font-size:14px;}
+
+  .hist-row,.saved-row{padding:11px 8px;border-bottom:1px solid var(--border-soft);}
+  .hist-row:last-child,.saved-row:last-child{border-bottom:none;}
+  .hist-main,.saved-main{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .hist-symbol{font-weight:700;font-size:12.5px;}
+  .hist-type{font-size:9.5px;color:var(--text-tertiary);background:var(--panel-soft);border:1px solid var(--border);padding:1.5px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;}
+  .hist-sub{font-size:11px;color:var(--text-tertiary);margin-top:3px;}
+  .hist-total{font-weight:700;font-size:13px;color:var(--green);}
+  .hist-row .hist-total{display:block;margin-top:5px;}
+  .saved-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  .saved-row-right{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+  .saved-del-btn{width:22px;height:22px;border-radius:50%;background:var(--panel-soft);border:1px solid var(--border);color:var(--text-secondary);font-size:14px;line-height:1;flex:0 0 auto;}
+  .saved-del-btn:hover{background:var(--red-dim);border-color:var(--red);color:var(--red);}
+
   /* ---------- PROFILE ---------- */
   .profile-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-md);padding:24px;}
   .profile-top{display:flex;align-items:center;gap:16px;}
@@ -379,6 +456,8 @@
     .clock-wrap{min-width:auto;}
     .form-grid{grid-template-columns:1fr;}
     .profile-fields{grid-template-columns:1fr;}
+    .calc-header-row{flex-direction:column;}
+    .rate-live-row{flex-wrap:wrap;}
   }
 
   @media (prefers-reduced-motion:reduce){
@@ -498,68 +577,279 @@
 
     <!-- ---------- CALCULATOR ---------- -->
     <section class="toplevel-view tv-hidden" id="calculator-view">
-      <div class="page-wrap">
-        <h1 class="page-title">Rate Calculator</h1>
-        <p class="page-sub">Estimate the value of gold or silver using live simulated rates.</p>
-        <div class="calc-card">
-          <div class="calc-live-rate">
-            <span class="clr-label" id="calcRateLabel">Live rate · GOLD INR 9999</span>
-            <span class="clr-value tabular" id="calcRateValue">-</span>
+      <div class="page-wrap calc-page-wrap">
+        <div class="calc-header-row">
+          <div>
+            <h1 class="page-title">Calculators</h1>
+            <p class="page-sub">Estimate gold or silver value using live simulated rates.</p>
           </div>
-          <div class="form-grid">
-            <div class="form-field">
-              <label for="calcMetal">Metal</label>
-              <select id="calcMetal">
-                <option value="gold">Gold</option>
-                <option value="silver">Silver</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label for="calcPurity">Purity</label>
-              <select id="calcPurity">
-                <option value="9999">999.9 (24K)</option>
-                <option value="995">995 (22K)</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label for="calcRateType">Rate type</label>
-              <select id="calcRateType"></select>
-            </div>
-            <div class="form-field">
-              <label for="calcWeight">Weight</label>
-              <div class="weight-row">
-                <input type="number" id="calcWeight" min="0" step="0.01" value="10">
-                <select id="calcUnit">
-                  <option value="g">grams</option>
-                  <option value="kg">kg</option>
-                  <option value="tola">tola</option>
-                  <option value="oz">oz (troy)</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-field">
-              <label for="calcMaking">Making charges (%)</label>
-              <input type="number" id="calcMaking" min="0" step="0.5" value="0">
-            </div>
-            <div class="form-field">
-              <label>&nbsp;</label>
-              <div class="calc-checkbox-row">
-                <input type="checkbox" id="calcGst">
-                <label for="calcGst">Add 3% GST</label>
-              </div>
-            </div>
-          </div>
-
-          <div class="calc-result">
-            <div class="result-line"><span>Rate used</span><b class="tabular" id="resRate">-</b></div>
-            <div class="result-line"><span>Base value</span><b class="tabular" id="resBase">-</b></div>
-            <div class="result-line"><span>Making charges</span><b class="tabular" id="resMaking">-</b></div>
-            <div class="result-line"><span>GST</span><b class="tabular" id="resGst">-</b></div>
-            <div class="result-total"><span>Total payable</span><span class="tabular" id="resTotal">-</span></div>
+          <div class="calc-tools">
+            <button class="calc-tool-btn" id="openHistoryBtn">History</button>
+            <button class="calc-tool-btn" id="openSavedBtn">Saved <span class="calc-badge" id="savedBadge">0</span></button>
           </div>
         </div>
+
+        <div class="calc-subtabs" id="calcSubtabs">
+          <button class="calc-subtab active" data-calctab="rates">Rates</button>
+          <button class="calc-subtab" data-calctab="wholesale">Wholesale</button>
+          <button class="calc-subtab" data-calctab="retail">Retail</button>
+        </div>
+
+        <!-- ===== Rates Calculator ===== -->
+        <div class="calc-panel" id="calcPanelRates">
+          <div class="calc-card">
+            <div class="calc-live-rate">
+              <span class="clr-label" id="calcRateLabel">Live rate · GOLD INR 9999</span>
+              <span class="clr-value tabular" id="calcRateValue">-</span>
+            </div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="calcMetal">Metal</label>
+                <select id="calcMetal">
+                  <option value="gold">Gold</option>
+                  <option value="silver">Silver</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="calcPurity">Purity</label>
+                <select id="calcPurity">
+                  <option value="9999">999.9 (24K)</option>
+                  <option value="995">995 (22K)</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="calcRateType">Rate type</label>
+                <select id="calcRateType"></select>
+              </div>
+              <div class="form-field">
+                <label for="calcWeight">Weight</label>
+                <div class="weight-row">
+                  <input type="number" id="calcWeight" min="0" step="0.01" value="10">
+                  <select id="calcUnit">
+                    <option value="g">grams</option>
+                    <option value="kg">kg</option>
+                    <option value="tola">tola</option>
+                    <option value="oz">oz (troy)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-field">
+                <label for="calcMaking">Making charges (%)</label>
+                <input type="number" id="calcMaking" min="0" step="0.5" value="0">
+              </div>
+              <div class="form-field">
+                <label>&nbsp;</label>
+                <div class="calc-checkbox-row">
+                  <input type="checkbox" id="calcGst">
+                  <label for="calcGst">Add 3% GST</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="calc-result">
+              <div class="result-line"><span>Rate used</span><b class="tabular" id="resRate">-</b></div>
+              <div class="result-line"><span>Base value</span><b class="tabular" id="resBase">-</b></div>
+              <div class="result-line"><span>Making charges</span><b class="tabular" id="resMaking">-</b></div>
+              <div class="result-line"><span>GST</span><b class="tabular" id="resGst">-</b></div>
+              <div class="result-total"><span>Total payable</span><span class="tabular" id="resTotal">-</span></div>
+            </div>
+            <div class="calc-actions">
+              <button class="calc-save-btn" id="calcSaveBtn">+ Save product</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Wholesale Calculator ===== -->
+        <div class="calc-panel calc-panel-hidden" id="calcPanelWholesale">
+          <div class="calc-card">
+            <div class="calc-live-rate">
+              <span class="clr-label" id="wsRateLabel">Live rate · GOLD INR 9999</span>
+              <span class="clr-value tabular" id="wsLiveRateValue">-</span>
+            </div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="wsMetal">Metal</label>
+                <select id="wsMetal">
+                  <option value="gold">Gold</option>
+                  <option value="silver">Silver</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="wsPurity">Purity</label>
+                <select id="wsPurity">
+                  <option value="9999">999.9 (24K)</option>
+                  <option value="995">995 (22K)</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="wsRateType">Rate type</label>
+                <select id="wsRateType"></select>
+              </div>
+              <div class="form-field">
+                <label>Unit of measurement</label>
+                <div class="uom-toggle" id="wsUomToggle">
+                  <button type="button" class="uom-btn active" data-uom="g">Gram</button>
+                  <button type="button" class="uom-btn" data-uom="kg">Kg</button>
+                </div>
+              </div>
+              <div class="form-field span2">
+                <label for="wsRate">Rate (per UoM)</label>
+                <div class="rate-live-row">
+                  <input type="number" id="wsRate" min="0" step="0.01" disabled>
+                  <label class="live-check"><input type="checkbox" id="wsRateLive" checked> Live</label>
+                </div>
+              </div>
+              <div class="form-field">
+                <label for="wsPcs">Pcs</label>
+                <input type="number" id="wsPcs" min="0" step="1" value="1">
+              </div>
+              <div class="form-field">
+                <label for="wsWeight">Weight (UoM)</label>
+                <input type="number" id="wsWeight" min="0" step="0.001" value="0">
+              </div>
+              <div class="form-field">
+                <label for="wsTunch">Tunch payment (%)</label>
+                <input type="number" id="wsTunch" min="0" step="0.01" value="100">
+              </div>
+              <div class="form-field">
+                <label for="wsMakingUom">Making (per UoM)</label>
+                <input type="number" id="wsMakingUom" min="0" step="0.01" value="0">
+              </div>
+              <div class="form-field">
+                <label for="wsMakingPcs">Making / Pcs</label>
+                <input type="number" id="wsMakingPcs" min="0" step="0.01" value="0">
+              </div>
+              <div class="form-field">
+                <label>&nbsp;</label>
+                <div class="calc-checkbox-row">
+                  <input type="checkbox" id="wsGst">
+                  <label for="wsGst">Add 3% GST</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="calc-result">
+              <div class="result-line"><span>Total fine</span><b class="tabular" id="wsResFine">-</b></div>
+              <div class="result-line"><span>Metal amount</span><b class="tabular" id="wsResMetal">-</b></div>
+              <div class="result-line"><span>Making amount</span><b class="tabular" id="wsResMaking">-</b></div>
+              <div class="result-line"><span>Amount</span><b class="tabular" id="wsResAmount">-</b></div>
+              <div class="result-line"><span>GST (3%)</span><b class="tabular" id="wsResGst">-</b></div>
+              <div class="result-total"><span>Amount total</span><span class="tabular" id="wsResTotal">-</span></div>
+            </div>
+            <div class="calc-actions">
+              <button class="calc-save-btn" id="wsSaveBtn">+ Save product</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Retail Calculator ===== -->
+        <div class="calc-panel calc-panel-hidden" id="calcPanelRetail">
+          <div class="calc-card">
+            <div class="calc-live-rate">
+              <span class="clr-label" id="rtRateLabel">Live rate · GOLD INR 9999</span>
+              <span class="clr-value tabular" id="rtLiveRateValue">-</span>
+            </div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="rtMetal">Metal</label>
+                <select id="rtMetal">
+                  <option value="gold">Gold</option>
+                  <option value="silver">Silver</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="rtPurity">Purity</label>
+                <select id="rtPurity">
+                  <option value="9999">999.9 (24K)</option>
+                  <option value="995">995 (22K)</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="rtRateType">Rate type</label>
+                <select id="rtRateType"></select>
+              </div>
+              <div class="form-field">
+                <label>Unit of measurement</label>
+                <div class="uom-toggle" id="rtUomToggle">
+                  <button type="button" class="uom-btn active" data-uom="g">Gram</button>
+                  <button type="button" class="uom-btn" data-uom="kg">Kg</button>
+                </div>
+              </div>
+              <div class="form-field span2">
+                <label for="rtRate">Rate (per UoM)</label>
+                <div class="rate-live-row">
+                  <input type="number" id="rtRate" min="0" step="0.01" disabled>
+                  <label class="live-check"><input type="checkbox" id="rtRateLive" checked> Live</label>
+                </div>
+              </div>
+              <div class="form-field">
+                <label for="rtPcs">Pcs</label>
+                <input type="number" id="rtPcs" min="0" step="1" value="1">
+              </div>
+              <div class="form-field">
+                <label for="rtWeight">Weight (UoM)</label>
+                <input type="number" id="rtWeight" min="0" step="0.001" value="0">
+              </div>
+              <div class="form-field">
+                <label for="rtMakingPct">Making (%)</label>
+                <input type="number" id="rtMakingPct" min="0" step="0.01" value="0">
+              </div>
+              <div class="form-field">
+                <label for="rtMakingUom">Making (per UoM)</label>
+                <input type="number" id="rtMakingUom" min="0" step="0.01" value="0" disabled>
+              </div>
+              <div class="form-field">
+                <label for="rtMakingPcs">Making / Pcs</label>
+                <input type="number" id="rtMakingPcs" min="0" step="0.01" value="0">
+              </div>
+              <div class="form-field">
+                <label>&nbsp;</label>
+                <div class="calc-checkbox-row">
+                  <input type="checkbox" id="rtGst">
+                  <label for="rtGst">Add 3% GST</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="calc-result">
+              <div class="result-line"><span>Metal amount</span><b class="tabular" id="rtResMetal">-</b></div>
+              <div class="result-line"><span>Making amount</span><b class="tabular" id="rtResMaking">-</b></div>
+              <div class="result-line"><span>Amount</span><b class="tabular" id="rtResAmount">-</b></div>
+              <div class="result-line"><span>GST (3%)</span><b class="tabular" id="rtResGst">-</b></div>
+              <div class="result-total"><span>Amount total</span><span class="tabular" id="rtResTotal">-</span></div>
+            </div>
+            <div class="calc-actions">
+              <button class="calc-save-btn" id="rtSaveBtn">+ Save product</button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
+
+    <!-- ---------- HISTORY MODAL ---------- -->
+    <div class="modal-overlay modal-hidden" id="historyModal">
+      <div class="modal-card">
+        <div class="modal-head"><span>Calculation History</span><button class="modal-close" id="closeHistoryBtn">&times;</button></div>
+        <div class="modal-body" id="historyList"></div>
+        <div class="modal-foot">
+          <span class="saved-sum">Every saved calculation is logged here</span>
+          <button class="modal-btn-secondary" id="clearHistoryBtn">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- SAVED PRODUCTS MODAL ---------- -->
+    <div class="modal-overlay modal-hidden" id="savedModal">
+      <div class="modal-card">
+        <div class="modal-head"><span>Saved Products</span><button class="modal-close" id="closeSavedBtn">&times;</button></div>
+        <div class="modal-body" id="savedList"></div>
+        <div class="modal-foot">
+          <div class="saved-sum">Total <b id="savedSumValue" class="tabular">₹0</b></div>
+          <button class="modal-btn-secondary" id="resetSavedBtn">Reset all</button>
+        </div>
+      </div>
+    </div>
 
     <!-- ---------- PROFILE ---------- -->
     <section class="toplevel-view tv-hidden" id="profile-view">
@@ -771,7 +1061,22 @@ var state = {
   selectedChartType: "line",
   searchQuery: "",
   calcInstrumentId: "gold9999",
-  intervalByTf: Object.assign({}, INTERVAL_DEFAULT)
+  intervalByTf: Object.assign({}, INTERVAL_DEFAULT),
+
+  /* Calculator segment */
+  calcTab: "rates",           // "rates" | "wholesale" | "retail"
+  history: [],                 // permanent (session) log of every saved calculation
+  savedItems: [],               // active "cart" of saved products, summable & deletable
+  ratesLastResult: null,
+  ws: {                         // Wholesale calculator inputs that live outside plain DOM state
+    uom: "g",                   // "g" | "kg"
+    lastResult: null
+  },
+  rt: {                         // Retail calculator inputs
+    uom: "g",
+    makingSource: "pct",         // "pct" | "perUom" - which making field is user-driven right now
+    lastResult: null
+  }
 };
 
 var sidebarRefs = {};   // id -> { row, price, change, hi, lo }
@@ -1319,6 +1624,8 @@ function switchTab(tab){
   }
   if(tab === "calculator"){
     computeCalculator();
+    computeWholesale();
+    computeRetail();
   }
 }
 
@@ -1361,13 +1668,34 @@ var RATE_TYPE_OPTIONS_SILVER = {
   ]
 };
 
-function refreshRateTypeOptions(){
-  var metal = document.getElementById("calcMetal").value;
-  var purity = document.getElementById("calcPurity").value;
+/* Populates the "Rate type" <select> for a given calculator prefix
+   ("calc" | "ws" | "rt") based on that calculator's Metal + Purity selects. */
+function refreshRateTypeOptions(prefix){
+  prefix = prefix || "calc";
+  var metal = document.getElementById(prefix + "Metal").value;
+  var purity = document.getElementById(prefix + "Purity").value;
   var options = (metal === "gold" ? RATE_TYPE_OPTIONS : RATE_TYPE_OPTIONS_SILVER)[purity];
-  var sel = document.getElementById("calcRateType");
+  var sel = document.getElementById(prefix + "RateType");
   sel.innerHTML = options.map(function(o){ return '<option value="' + o.value + '">' + o.label + '</option>'; }).join("");
-  state.calcInstrumentId = options[0].value;
+  if(prefix === "calc") state.calcInstrumentId = options[0].value;
+}
+
+/* Converts an instrument's natively-quoted price (per 10g for gold, per kg
+   for silver) into a price per gram or per kg, for the Wholesale/Retail
+   calculators' selectable Unit of Measurement. */
+function getRatePerUom(inst, metal, uom){
+  var perUnitG = metal === "gold" ? 10 : 1000;
+  var perGram = inst.price / perUnitG;
+  return uom === "kg" ? perGram * 1000 : perGram;
+}
+
+/* toLocaleString() adds thousands separators, which real browsers reject
+   when assigned to an <input type="number">'s .value (and parseFloat() would
+   silently truncate at the comma if read back). Use this instead whenever
+   writing a computed value into a number input. */
+function plainNumber(n, decimals){
+  n = isFinite(n) ? n : 0;
+  return n.toFixed(decimals === undefined ? 2 : decimals);
 }
 
 function computeCalculator(){
@@ -1395,6 +1723,194 @@ function computeCalculator(){
   document.getElementById("resMaking").textContent = "\u20B9" + formatNumber(makingAmt, 2);
   document.getElementById("resGst").textContent = "\u20B9" + formatNumber(gstAmt, 2);
   document.getElementById("resTotal").textContent = "\u20B9" + formatNumber(total, 2);
+
+  state.ratesLastResult = { symbol: inst.symbol, weight: weight, uom: unit, pcs: 1, total: total };
+}
+
+/* ---- Wholesale calculator ------------------------------------------- */
+function computeWholesale(){
+  var metal = document.getElementById("wsMetal").value;
+  var instId = document.getElementById("wsRateType").value;
+  var inst = byId[instId];
+  if(!inst) return;
+  var uom = state.ws.uom;
+
+  var liveRate = getRatePerUom(inst, metal, uom);
+  var liveOn = document.getElementById("wsRateLive").checked;
+  var rateInput = document.getElementById("wsRate");
+  var rate;
+  if(liveOn){
+    rate = liveRate;
+    rateInput.value = plainNumber(rate, 2);
+    rateInput.disabled = true;
+  } else {
+    rateInput.disabled = false;
+    rate = parseFloat(rateInput.value) || 0;
+  }
+
+  var pcs = parseFloat(document.getElementById("wsPcs").value) || 0;
+  var weight = parseFloat(document.getElementById("wsWeight").value) || 0;
+  var tunch = parseFloat(document.getElementById("wsTunch").value) || 0;
+  var makingUom = parseFloat(document.getElementById("wsMakingUom").value) || 0;
+  var makingPcs = parseFloat(document.getElementById("wsMakingPcs").value) || 0;
+  var addGst = document.getElementById("wsGst").checked;
+
+  var totalFine = weight * (tunch / 100);
+  var metalAmount = totalFine * rate;
+  var makingAmount = (weight * makingUom) + (makingPcs * pcs);
+  var amount = metalAmount + makingAmount;
+  var gstAmt = addGst ? amount * 0.03 : 0;
+  var total = amount + gstAmt;
+
+  document.getElementById("wsRateLabel").textContent = "Live rate · " + inst.symbol;
+  document.getElementById("wsLiveRateValue").textContent = formatPrice(inst);
+  document.getElementById("wsResFine").textContent = formatNumber(totalFine, 3) + " " + uom;
+  document.getElementById("wsResMetal").textContent = "\u20B9" + formatNumber(metalAmount, 2);
+  document.getElementById("wsResMaking").textContent = "\u20B9" + formatNumber(makingAmount, 2);
+  document.getElementById("wsResAmount").textContent = "\u20B9" + formatNumber(amount, 2);
+  document.getElementById("wsResGst").textContent = "\u20B9" + formatNumber(gstAmt, 2);
+  document.getElementById("wsResTotal").textContent = "\u20B9" + formatNumber(total, 2);
+
+  state.ws.lastResult = { symbol: inst.symbol, weight: weight, uom: uom, pcs: pcs, total: total };
+}
+
+/* ---- Retail calculator ------------------------------------------------
+   triggerField: "pct" | "perUom" | undefined - which making field the user
+   just edited, so the OTHER one can be recalculated from it. */
+function computeRetail(triggerField){
+  var metal = document.getElementById("rtMetal").value;
+  var instId = document.getElementById("rtRateType").value;
+  var inst = byId[instId];
+  if(!inst) return;
+  var uom = state.rt.uom;
+
+  var liveRate = getRatePerUom(inst, metal, uom);
+  var liveOn = document.getElementById("rtRateLive").checked;
+  var rateInput = document.getElementById("rtRate");
+  var rate;
+  if(liveOn){
+    rate = liveRate;
+    rateInput.value = plainNumber(rate, 2);
+    rateInput.disabled = true;
+  } else {
+    rateInput.disabled = false;
+    rate = parseFloat(rateInput.value) || 0;
+  }
+
+  var pcs = parseFloat(document.getElementById("rtPcs").value) || 0;
+  var weight = parseFloat(document.getElementById("rtWeight").value) || 0;
+  var makingPcs = parseFloat(document.getElementById("rtMakingPcs").value) || 0;
+  var addGst = document.getElementById("rtGst").checked;
+
+  if(triggerField === "pct" || triggerField === "perUom"){
+    state.rt.makingSource = triggerField;
+  }
+
+  var pctInput = document.getElementById("rtMakingPct");
+  var uomInput = document.getElementById("rtMakingUom");
+  var makingPct, makingPerUom;
+
+  if(state.rt.makingSource === "perUom"){
+    makingPerUom = parseFloat(uomInput.value) || 0;
+    makingPct = rate > 0 ? (makingPerUom / rate) * 100 : 0;
+    pctInput.value = plainNumber(makingPct, 2);
+  } else {
+    makingPct = parseFloat(pctInput.value) || 0;
+    makingPerUom = rate * (makingPct / 100);
+    uomInput.value = plainNumber(makingPerUom, 2);
+  }
+  pctInput.disabled = (state.rt.makingSource === "perUom");
+  uomInput.disabled = (state.rt.makingSource === "pct");
+
+  var metalAmount = rate * weight;
+  var makingPerWeight = state.rt.makingSource === "perUom" ? (makingPerUom * weight) : (rate * (makingPct / 100) * weight);
+  var makingAmount = makingPerWeight + (makingPcs * pcs);
+  var amount = metalAmount + makingAmount;
+  var gstAmt = addGst ? amount * 0.03 : 0;
+  var total = amount + gstAmt;
+
+  document.getElementById("rtRateLabel").textContent = "Live rate · " + inst.symbol;
+  document.getElementById("rtLiveRateValue").textContent = formatPrice(inst);
+  document.getElementById("rtResMetal").textContent = "\u20B9" + formatNumber(metalAmount, 2);
+  document.getElementById("rtResMaking").textContent = "\u20B9" + formatNumber(makingAmount, 2);
+  document.getElementById("rtResAmount").textContent = "\u20B9" + formatNumber(amount, 2);
+  document.getElementById("rtResGst").textContent = "\u20B9" + formatNumber(gstAmt, 2);
+  document.getElementById("rtResTotal").textContent = "\u20B9" + formatNumber(total, 2);
+
+  state.rt.lastResult = { symbol: inst.symbol, weight: weight, uom: uom, pcs: pcs, total: total };
+}
+
+/* ---- History + Saved products (in-memory for this session) ---------- */
+function saveCalcResult(calcType, r){
+  if(!r || !r.weight){
+    showToast("Enter a weight before saving");
+    return;
+  }
+  var rec = {
+    id: "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    ts: Date.now(),
+    calcType: calcType,
+    symbol: r.symbol,
+    weight: r.weight,
+    uom: r.uom,
+    pcs: r.pcs || 1,
+    total: r.total
+  };
+  state.history.unshift(rec);
+  state.savedItems.unshift(rec);
+  updateSavedBadge();
+  showToast(calcType + " saved · " + r.symbol, "buy");
+}
+
+function updateSavedBadge(){
+  document.getElementById("savedBadge").textContent = state.savedItems.length;
+}
+
+function historyRowHtml(r){
+  return '<div class="hist-row">' +
+    '<div class="hist-main"><span class="hist-symbol">' + r.symbol + '</span><span class="hist-type">' + r.calcType + '</span></div>' +
+    '<div class="hist-sub">' + formatNumber(r.weight, 3) + ' ' + r.uom + (r.pcs > 1 ? (' \u00b7 ' + r.pcs + ' pcs') : '') + ' \u00b7 ' + new Date(r.ts).toLocaleTimeString() + '</div>' +
+    '<div class="hist-total tabular">\u20B9' + formatNumber(r.total, 2) + '</div>' +
+  '</div>';
+}
+
+function renderHistoryList(){
+  var el = document.getElementById("historyList");
+  el.innerHTML = state.history.length
+    ? state.history.map(historyRowHtml).join("")
+    : '<div class="modal-empty">No calculations saved yet. Use "+ Save product" on any calculator.</div>';
+}
+
+function renderSavedList(){
+  var el = document.getElementById("savedList");
+  el.innerHTML = state.savedItems.length
+    ? state.savedItems.map(function(r){
+        return '<div class="saved-row" data-id="' + r.id + '">' +
+          '<div class="saved-left">' +
+            '<div class="saved-main"><span class="hist-symbol">' + r.symbol + '</span><span class="hist-type">' + r.calcType + '</span></div>' +
+            '<div class="hist-sub">' + formatNumber(r.weight, 3) + ' ' + r.uom + (r.pcs > 1 ? (' \u00b7 ' + r.pcs + ' pcs') : '') + '</div>' +
+          '</div>' +
+          '<div class="saved-row-right">' +
+            '<span class="hist-total tabular">\u20B9' + formatNumber(r.total, 2) + '</span>' +
+            '<button class="saved-del-btn" data-del="' + r.id + '" title="Remove">&times;</button>' +
+          '</div>' +
+        '</div>';
+      }).join("")
+    : '<div class="modal-empty">No saved products yet. Use "+ Save product" on any calculator.</div>';
+
+  var sum = state.savedItems.reduce(function(acc, r){ return acc + r.total; }, 0);
+  document.getElementById("savedSumValue").textContent = "\u20B9" + formatNumber(sum, 2);
+  updateSavedBadge();
+}
+
+function wireUomToggle(containerId, stateKey, computeFn){
+  document.getElementById(containerId).addEventListener("click", function(e){
+    var btn = e.target.closest(".uom-btn");
+    if(!btn) return;
+    state[stateKey].uom = btn.dataset.uom;
+    document.querySelectorAll("#" + containerId + " .uom-btn").forEach(function(b){ b.classList.toggle("active", b === btn); });
+    computeFn();
+  });
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1431,7 +1947,11 @@ function tick(){
     }
   });
 
-  if(state.currentTab === "calculator") computeCalculator();
+  if(state.currentTab === "calculator"){
+    if(state.calcTab === "rates") computeCalculator();
+    else if(state.calcTab === "wholesale") computeWholesale();
+    else if(state.calcTab === "retail") computeRetail();
+  }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1627,13 +2147,113 @@ function wireEvents(){
 
   ["calcMetal", "calcPurity"].forEach(function(id){
     document.getElementById(id).addEventListener("change", function(){
-      refreshRateTypeOptions();
+      refreshRateTypeOptions("calc");
       computeCalculator();
     });
   });
   ["calcRateType", "calcWeight", "calcUnit", "calcMaking", "calcGst"].forEach(function(id){
     document.getElementById(id).addEventListener("input", computeCalculator);
     document.getElementById(id).addEventListener("change", computeCalculator);
+  });
+
+  /* --- Calculator sub-tabs (Rates / Wholesale / Retail) --- */
+  document.getElementById("calcSubtabs").addEventListener("click", function(e){
+    var btn = e.target.closest(".calc-subtab");
+    if(!btn) return;
+    state.calcTab = btn.dataset.calctab;
+    document.querySelectorAll("#calcSubtabs .calc-subtab").forEach(function(b){ b.classList.toggle("active", b === btn); });
+    document.getElementById("calcPanelRates").classList.toggle("calc-panel-hidden", state.calcTab !== "rates");
+    document.getElementById("calcPanelWholesale").classList.toggle("calc-panel-hidden", state.calcTab !== "wholesale");
+    document.getElementById("calcPanelRetail").classList.toggle("calc-panel-hidden", state.calcTab !== "retail");
+    if(state.calcTab === "rates") computeCalculator();
+    else if(state.calcTab === "wholesale") computeWholesale();
+    else if(state.calcTab === "retail") computeRetail();
+  });
+
+  /* --- Wholesale calculator --- */
+  ["wsMetal", "wsPurity"].forEach(function(id){
+    document.getElementById(id).addEventListener("change", function(){
+      refreshRateTypeOptions("ws");
+      computeWholesale();
+    });
+  });
+  ["wsRateType", "wsRate", "wsPcs", "wsWeight", "wsTunch", "wsMakingUom", "wsMakingPcs"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", function(){ computeWholesale(); });
+    document.getElementById(id).addEventListener("change", function(){ computeWholesale(); });
+  });
+  document.getElementById("wsGst").addEventListener("change", function(){ computeWholesale(); });
+  document.getElementById("wsRateLive").addEventListener("change", function(){ computeWholesale(); });
+  wireUomToggle("wsUomToggle", "ws", computeWholesale);
+
+  /* --- Retail calculator --- */
+  ["rtMetal", "rtPurity"].forEach(function(id){
+    document.getElementById(id).addEventListener("change", function(){
+      refreshRateTypeOptions("rt");
+      computeRetail();
+    });
+  });
+  ["rtRateType", "rtRate", "rtPcs", "rtWeight", "rtMakingPcs"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", function(){ computeRetail(); });
+    document.getElementById(id).addEventListener("change", function(){ computeRetail(); });
+  });
+  document.getElementById("rtMakingPct").addEventListener("input", function(){ computeRetail("pct"); });
+  document.getElementById("rtMakingUom").addEventListener("input", function(){ computeRetail("perUom"); });
+  document.getElementById("rtGst").addEventListener("change", function(){ computeRetail(); });
+  document.getElementById("rtRateLive").addEventListener("change", function(){ computeRetail(); });
+  wireUomToggle("rtUomToggle", "rt", computeRetail);
+
+  /* --- Save-to-list buttons --- */
+  document.getElementById("calcSaveBtn").addEventListener("click", function(){ saveCalcResult("Rates", state.ratesLastResult); });
+  document.getElementById("wsSaveBtn").addEventListener("click", function(){ saveCalcResult("Wholesale", state.ws.lastResult); });
+  document.getElementById("rtSaveBtn").addEventListener("click", function(){ saveCalcResult("Retail", state.rt.lastResult); });
+
+  /* --- History modal --- */
+  document.getElementById("openHistoryBtn").addEventListener("click", function(){
+    renderHistoryList();
+    document.getElementById("historyModal").classList.remove("modal-hidden");
+  });
+  document.getElementById("closeHistoryBtn").addEventListener("click", function(){
+    document.getElementById("historyModal").classList.add("modal-hidden");
+  });
+  document.getElementById("historyModal").addEventListener("click", function(e){
+    if(e.target.id === "historyModal") e.currentTarget.classList.add("modal-hidden");
+  });
+  document.getElementById("clearHistoryBtn").addEventListener("click", function(){
+    if(!state.history.length) return;
+    state.history = [];
+    renderHistoryList();
+    showToast("History cleared");
+  });
+
+  /* --- Saved products modal --- */
+  document.getElementById("openSavedBtn").addEventListener("click", function(){
+    renderSavedList();
+    document.getElementById("savedModal").classList.remove("modal-hidden");
+  });
+  document.getElementById("closeSavedBtn").addEventListener("click", function(){
+    document.getElementById("savedModal").classList.add("modal-hidden");
+  });
+  document.getElementById("savedModal").addEventListener("click", function(e){
+    if(e.target.id === "savedModal") e.currentTarget.classList.add("modal-hidden");
+  });
+  document.getElementById("savedList").addEventListener("click", function(e){
+    var delBtn = e.target.closest(".saved-del-btn");
+    if(!delBtn) return;
+    var id = delBtn.dataset.del;
+    state.savedItems = state.savedItems.filter(function(r){ return r.id !== id; });
+    renderSavedList();
+  });
+  document.getElementById("resetSavedBtn").addEventListener("click", function(){
+    if(!state.savedItems.length) return;
+    state.savedItems = [];
+    renderSavedList();
+    showToast("Saved list cleared");
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){
+      document.getElementById("historyModal").classList.add("modal-hidden");
+      document.getElementById("savedModal").classList.add("modal-hidden");
+    }
   });
 
   document.getElementById("logoutBtn").addEventListener("click", function(){
@@ -1647,8 +2267,12 @@ function wireEvents(){
 function init(){
   buildWatchlist();
   buildOverviewGrid();
-  refreshRateTypeOptions();
+  refreshRateTypeOptions("calc");
+  refreshRateTypeOptions("ws");
+  refreshRateTypeOptions("rt");
   computeCalculator();
+  computeWholesale();
+  computeRetail();
   wireEvents();
   tickClock();
   setInterval(tickClock, 1000);
