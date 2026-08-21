@@ -378,7 +378,16 @@
   .hist-type{font-size:9.5px;color:var(--text-tertiary);background:var(--panel-soft);border:1px solid var(--border);padding:1.5px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;}
   .hist-sub{font-size:11px;color:var(--text-tertiary);margin-top:3px;}
   .hist-total{font-weight:700;font-size:13px;color:var(--green);}
-  .hist-row .hist-total{display:block;margin-top:5px;}
+  .hist-row{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;border-radius:6px;transition:background .12s ease;}
+  .hist-row:hover,.hist-row:focus-visible{background:var(--panel-soft);outline:none;}
+  .hist-row-main{min-width:0;}
+  .hist-row-right{display:flex;align-items:center;gap:10px;flex:0 0 auto;}
+  .hist-add-icon{
+    width:22px;height:22px;border-radius:50%;background:var(--green-dim);border:1px solid rgba(0,208,156,.35);
+    color:var(--green);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;
+    line-height:1;flex:0 0 auto;transition:all .12s ease;
+  }
+  .hist-row:hover .hist-add-icon,.hist-row:focus-visible .hist-add-icon{background:var(--green);color:#0d0d0d;}
   .saved-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
   .saved-row-right{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
   .saved-del-btn{width:22px;height:22px;border-radius:50%;background:var(--panel-soft);border:1px solid var(--border);color:var(--text-secondary);font-size:14px;line-height:1;flex:0 0 auto;}
@@ -693,7 +702,7 @@
                 </div>
               </div>
               <div class="form-field span2">
-                <label for="wsRate">Rate (per UoM)</label>
+                <label for="wsRate" id="wsRateInputLabel">Rate (per Gram)</label>
                 <div class="rate-live-row">
                   <input type="number" id="wsRate" min="0" step="0.01" disabled>
                   <label class="live-check"><input type="checkbox" id="wsRateLive" checked> Live</label>
@@ -704,7 +713,7 @@
                 <input type="number" id="wsPcs" min="0" step="1" value="1">
               </div>
               <div class="form-field">
-                <label for="wsWeight">Weight (UoM)</label>
+                <label for="wsWeight" id="wsWeightLabel">Weight (Gram)</label>
                 <input type="number" id="wsWeight" min="0" step="0.001" value="0">
               </div>
               <div class="form-field">
@@ -712,7 +721,7 @@
                 <input type="number" id="wsTunch" min="0" step="0.01" value="100">
               </div>
               <div class="form-field">
-                <label for="wsMakingUom">Making (per UoM)</label>
+                <label for="wsMakingUom" id="wsMakingUomLabel">Making (per Gram)</label>
                 <input type="number" id="wsMakingUom" min="0" step="0.01" value="0">
               </div>
               <div class="form-field">
@@ -776,7 +785,7 @@
                 </div>
               </div>
               <div class="form-field span2">
-                <label for="rtRate">Rate (per UoM)</label>
+                <label for="rtRate" id="rtRateInputLabel">Rate (per Gram)</label>
                 <div class="rate-live-row">
                   <input type="number" id="rtRate" min="0" step="0.01" disabled>
                   <label class="live-check"><input type="checkbox" id="rtRateLive" checked> Live</label>
@@ -787,7 +796,7 @@
                 <input type="number" id="rtPcs" min="0" step="1" value="1">
               </div>
               <div class="form-field">
-                <label for="rtWeight">Weight (UoM)</label>
+                <label for="rtWeight" id="rtWeightLabel">Weight (Gram)</label>
                 <input type="number" id="rtWeight" min="0" step="0.001" value="0">
               </div>
               <div class="form-field">
@@ -795,8 +804,8 @@
                 <input type="number" id="rtMakingPct" min="0" step="0.01" value="0">
               </div>
               <div class="form-field">
-                <label for="rtMakingUom">Making (per UoM)</label>
-                <input type="number" id="rtMakingUom" min="0" step="0.01" value="0" disabled>
+                <label for="rtMakingUom" id="rtMakingUomLabel">Making (per Gram)</label>
+                <input type="number" id="rtMakingUom" min="0" step="0.01" value="0">
               </div>
               <div class="form-field">
                 <label for="rtMakingPcs">Making / Pcs</label>
@@ -833,7 +842,7 @@
         <div class="modal-head"><span>Calculation History</span><button class="modal-close" id="closeHistoryBtn">&times;</button></div>
         <div class="modal-body" id="historyList"></div>
         <div class="modal-foot">
-          <span class="saved-sum">Every saved calculation is logged here</span>
+          <span class="saved-sum">Tap any entry to add it to Saved</span>
           <button class="modal-btn-secondary" id="clearHistoryBtn">Clear</button>
         </div>
       </div>
@@ -1698,6 +1707,23 @@ function plainNumber(n, decimals){
   return n.toFixed(decimals === undefined ? 2 : decimals);
 }
 
+function uomDisplayName(uom){
+  return uom === "kg" ? "Kg" : "Gram";
+}
+
+/* Swaps every "UoM" placeholder label for the calculator's actually-chosen
+   unit (Gram/Kg), so labels always read e.g. "Weight (Kg)" instead of a
+   generic "Weight (UoM)". */
+function updateUomLabels(prefix, uom){
+  var name = uomDisplayName(uom);
+  var rateLbl = document.getElementById(prefix + "RateInputLabel");
+  var weightLbl = document.getElementById(prefix + "WeightLabel");
+  var makingLbl = document.getElementById(prefix + "MakingUomLabel");
+  if(rateLbl) rateLbl.textContent = "Rate (per " + name + ")";
+  if(weightLbl) weightLbl.textContent = "Weight (" + name + ")";
+  if(makingLbl) makingLbl.textContent = "Making (per " + name + ")";
+}
+
 function computeCalculator(){
   var metal = document.getElementById("calcMetal").value;
   var weight = parseFloat(document.getElementById("calcWeight").value) || 0;
@@ -1734,6 +1760,7 @@ function computeWholesale(){
   var inst = byId[instId];
   if(!inst) return;
   var uom = state.ws.uom;
+  updateUomLabels("ws", uom);
 
   var liveRate = getRatePerUom(inst, metal, uom);
   var liveOn = document.getElementById("wsRateLive").checked;
@@ -1783,6 +1810,7 @@ function computeRetail(triggerField){
   var inst = byId[instId];
   if(!inst) return;
   var uom = state.rt.uom;
+  updateUomLabels("rt", uom);
 
   var liveRate = getRatePerUom(inst, metal, uom);
   var liveOn = document.getElementById("rtRateLive").checked;
@@ -1810,6 +1838,9 @@ function computeRetail(triggerField){
   var uomInput = document.getElementById("rtMakingUom");
   var makingPct, makingPerUom;
 
+  /* Both fields stay editable at all times - whichever one the user typed
+     into most recently (state.rt.makingSource) drives the other, so the
+     link works in both directions rather than locking one field. */
   if(state.rt.makingSource === "perUom"){
     makingPerUom = parseFloat(uomInput.value) || 0;
     makingPct = rate > 0 ? (makingPerUom / rate) * 100 : 0;
@@ -1819,8 +1850,6 @@ function computeRetail(triggerField){
     makingPerUom = rate * (makingPct / 100);
     uomInput.value = plainNumber(makingPerUom, 2);
   }
-  pctInput.disabled = (state.rt.makingSource === "perUom");
-  uomInput.disabled = (state.rt.makingSource === "pct");
 
   var metalAmount = rate * weight;
   var makingPerWeight = state.rt.makingSource === "perUom" ? (makingPerUom * weight) : (rate * (makingPct / 100) * weight);
@@ -1867,10 +1896,15 @@ function updateSavedBadge(){
 }
 
 function historyRowHtml(r){
-  return '<div class="hist-row">' +
-    '<div class="hist-main"><span class="hist-symbol">' + r.symbol + '</span><span class="hist-type">' + r.calcType + '</span></div>' +
-    '<div class="hist-sub">' + formatNumber(r.weight, 3) + ' ' + r.uom + (r.pcs > 1 ? (' \u00b7 ' + r.pcs + ' pcs') : '') + ' \u00b7 ' + new Date(r.ts).toLocaleTimeString() + '</div>' +
-    '<div class="hist-total tabular">\u20B9' + formatNumber(r.total, 2) + '</div>' +
+  return '<div class="hist-row" data-histid="' + r.id + '" role="button" tabindex="0" title="Tap to add to Saved">' +
+    '<div class="hist-row-main">' +
+      '<div class="hist-main"><span class="hist-symbol">' + r.symbol + '</span><span class="hist-type">' + r.calcType + '</span></div>' +
+      '<div class="hist-sub">' + formatNumber(r.weight, 3) + ' ' + r.uom + (r.pcs > 1 ? (' \u00b7 ' + r.pcs + ' pcs') : '') + ' \u00b7 ' + new Date(r.ts).toLocaleTimeString() + '</div>' +
+    '</div>' +
+    '<div class="hist-row-right">' +
+      '<span class="hist-total tabular">\u20B9' + formatNumber(r.total, 2) + '</span>' +
+      '<span class="hist-add-icon">+</span>' +
+    '</div>' +
   '</div>';
 }
 
@@ -1879,6 +1913,27 @@ function renderHistoryList(){
   el.innerHTML = state.history.length
     ? state.history.map(historyRowHtml).join("")
     : '<div class="modal-empty">No calculations saved yet. Use "+ Save product" on any calculator.</div>';
+}
+
+/* Copies a History entry back into the Saved list (History itself is left
+   untouched, so it stays a full log even after items are added/removed
+   from the Saved "cart" any number of times). */
+function addHistoryItemToSaved(histId){
+  var src = state.history.filter(function(r){ return r.id === histId; })[0];
+  if(!src) return;
+  var rec = {
+    id: "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    ts: Date.now(),
+    calcType: src.calcType,
+    symbol: src.symbol,
+    weight: src.weight,
+    uom: src.uom,
+    pcs: src.pcs,
+    total: src.total
+  };
+  state.savedItems.unshift(rec);
+  renderSavedList();
+  showToast(src.calcType + " added to Saved · " + src.symbol, "buy");
 }
 
 function renderSavedList(){
@@ -2223,6 +2278,18 @@ function wireEvents(){
     state.history = [];
     renderHistoryList();
     showToast("History cleared");
+  });
+  document.getElementById("historyList").addEventListener("click", function(e){
+    var row = e.target.closest(".hist-row");
+    if(!row) return;
+    addHistoryItemToSaved(row.dataset.histid);
+  });
+  document.getElementById("historyList").addEventListener("keydown", function(e){
+    if(e.key !== "Enter" && e.key !== " ") return;
+    var row = e.target.closest(".hist-row");
+    if(!row) return;
+    e.preventDefault();
+    addHistoryItemToSaved(row.dataset.histid);
   });
 
   /* --- Saved products modal --- */
