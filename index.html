@@ -264,9 +264,42 @@
   .chart-canvas-wrap{flex:1;min-height:0;position:relative;padding:14px 18px 8px;cursor:grab;touch-action:none;user-select:none;}
   .chart-canvas-wrap svg{width:100%;height:100%;display:block;}
   .chart-canvas-wrap.dragging{cursor:grabbing;}
-  .chart-hint{position:absolute;right:20px;bottom:6px;font-size:9.5px;color:var(--text-tertiary);opacity:.5;pointer-events:none;letter-spacing:.01em;}
+  .chart-hint{position:absolute;right:20px;bottom:6px;font-size:9.5px;color:var(--text-tertiary);opacity:.5;pointer-events:none;letter-spacing:.01em;z-index:1;}
   @media (max-width:700px){ .chart-hint{display:none;} }
   .chart-axis-x{display:flex;justify-content:space-between;padding:0 18px 14px;font-size:10.5px;color:var(--text-tertiary);}
+
+  /* TradingView-style crosshair */
+  .chart-crosshair-svg{
+    position:absolute;top:14px;right:18px;bottom:8px;left:18px;
+    pointer-events:none;opacity:0;transition:opacity .08s ease;
+  }
+  /* Needs ID-level specificity: ".chart-canvas-wrap svg{width:100%;height:100%}"
+     above has higher specificity than a single class and would otherwise force
+     this to 100% of the wrap, ignoring the inset positioning and misaligning
+     the crosshair from the chart it's supposed to overlay. */
+  #chartCrosshairSvg{width:auto;height:auto;}
+  .chart-crosshair-svg.cx-active{opacity:1;}
+  .crosshair-line{stroke:var(--text-tertiary);stroke-width:1;stroke-dasharray:3,4;vector-effect:non-scaling-stroke;}
+  .crosshair-dot{fill:var(--blue);stroke:var(--panel);stroke-width:1.5;vector-effect:non-scaling-stroke;}
+
+  .chart-cx-label{
+    position:absolute;pointer-events:none;opacity:0;transition:opacity .08s ease;
+    background:var(--blue);color:#fff;font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums;
+    padding:3px 7px;border-radius:4px;white-space:nowrap;z-index:5;
+  }
+  .chart-cx-label.cx-active{opacity:1;}
+  .chart-cx-label-x{transform:translate(-50%,0);}
+  .chart-cx-label-y{right:4px;transform:translate(0,-50%);}
+
+  .chart-ohlc-overlay{
+    position:absolute;top:14px;left:22px;pointer-events:none;z-index:4;
+    display:flex;align-items:center;gap:11px;font-size:11.5px;font-weight:600;
+    color:var(--text-tertiary);font-variant-numeric:tabular-nums;
+  }
+  .chart-ohlc-overlay b{color:var(--text-primary);font-weight:700;margin-left:3px;}
+  .chart-ohlc-overlay .ohlc-pos{color:var(--green);}
+  .chart-ohlc-overlay .ohlc-neg{color:var(--red);}
+  @media (max-width:700px){ .chart-ohlc-overlay{font-size:10.5px;gap:8px;} }
 
   /* ---------- CALCULATOR ---------- */
   #calculator-view,#profile-view{flex:1;overflow-y:auto;justify-content:center;}
@@ -576,6 +609,14 @@
             </div>
             <div class="chart-canvas-wrap" id="chartCanvasWrap">
               <svg id="bigChartSvg" viewBox="0 0 1000 380" preserveAspectRatio="none"></svg>
+              <svg id="chartCrosshairSvg" class="chart-crosshair-svg" viewBox="0 0 1000 380" preserveAspectRatio="none">
+                <line id="cxLineV" class="crosshair-line" x1="0" y1="0" x2="0" y2="380"></line>
+                <line id="cxLineH" class="crosshair-line" x1="0" y1="0" x2="1000" y2="0"></line>
+                <circle id="cxDot" class="crosshair-dot" r="4" cx="0" cy="0"></circle>
+              </svg>
+              <div class="chart-ohlc-overlay" id="chartOhlcOverlay"></div>
+              <div class="chart-cx-label chart-cx-label-x" id="cxXLabel"></div>
+              <div class="chart-cx-label chart-cx-label-y" id="cxYLabel"></div>
               <div class="chart-hint">Scroll to zoom · Shift+scroll for Y-axis · Drag to pan · Double-click to reset</div>
             </div>
             <div class="chart-axis-x" id="chartAxisX"><span>-</span><span>-</span><span>-</span></div>
@@ -704,8 +745,8 @@
               <div class="form-field span2">
                 <label for="wsRate" id="wsRateInputLabel">Rate (per Gram)</label>
                 <div class="rate-live-row">
-                  <input type="number" id="wsRate" min="0" step="0.01" disabled>
-                  <label class="live-check"><input type="checkbox" id="wsRateLive" checked> Live</label>
+                  <input type="number" id="wsRate" min="0" step="0.01">
+                  <label class="live-check"><input type="checkbox" id="wsRateLive"> Live</label>
                 </div>
               </div>
               <div class="form-field">
@@ -787,8 +828,8 @@
               <div class="form-field span2">
                 <label for="rtRate" id="rtRateInputLabel">Rate (per Gram)</label>
                 <div class="rate-live-row">
-                  <input type="number" id="rtRate" min="0" step="0.01" disabled>
-                  <label class="live-check"><input type="checkbox" id="rtRateLive" checked> Live</label>
+                  <input type="number" id="rtRate" min="0" step="0.01">
+                  <label class="live-check"><input type="checkbox" id="rtRateLive"> Live</label>
                 </div>
               </div>
               <div class="form-field">
@@ -1100,6 +1141,19 @@ var chartDrag = null;        // { id, startX, startFrac, layout, width }
 var chartPinch = null;       // { startDist, startWidth, layout }
 var activeChartPointers = {}; // pointerId -> {x,y}
 
+/* Shared padding used by both renderBigLine/renderBigCandles AND the
+   crosshair's pixel<->price math, so the two stay perfectly in sync. */
+var CHART_PAD_TOP = 24;
+var CHART_PAD_BOTTOM = 30;
+
+/* TradingView-style crosshair state, populated on every chart render so the
+   crosshair (and its axis labels / OHLC legend) can be redrawn instantly on
+   hover, or refreshed in place while the mouse stays still during live ticks. */
+var lastChartType = "line";  // "line" | "candle" - what's currently drawn
+var lastVisibleData = null;  // the exact (post-zoom/pan) slice of points or candles on screen
+var lastYRange = { min: 0, max: 0 };
+var chartCrosshair = { active: false, clientX: 0, clientY: 0 };
+
 /* ---------------------------------------------------------------------- */
 /* Toasts                                                                   */
 /* ---------------------------------------------------------------------- */
@@ -1242,6 +1296,15 @@ function updateAxisLabels(){
   axisEl.innerHTML = "<span>" + labels[0] + "</span><span>" + labels[1] + "</span><span>" + labels[2] + "</span>";
 }
 
+/* Same "ago" labeling scheme as updateAxisLabels, but for a single arbitrary
+   absolute index - used to label the crosshair's X-axis position. */
+function formatAgoForIndex(absoluteIdx, totalLen){
+  var span = TF_SPAN[state.selectedTf];
+  if(!span || totalLen <= 1) return "";
+  var frac = absoluteIdx / (totalLen - 1);
+  return formatAgo(span.amount * (1 - frac), span.unit);
+}
+
 /* ---------------------------------------------------------------------- */
 /* SVG chart drawing                                                       */
 /* ---------------------------------------------------------------------- */
@@ -1278,7 +1341,7 @@ function renderSparkline(svg, series, positive){
 function renderBigLine(svg, fullSeries, positive){
   var vb = svg.viewBox.baseVal;
   var w = vb.width || 1000, h = vb.height || 380;
-  var padTop = 24, padBottom = 30;
+  var padTop = CHART_PAD_TOP, padBottom = CHART_PAD_BOTTOM;
 
   var win = computeVisibleWindow(fullSeries.length);
   var series = fullSeries.slice(win.startIdx, win.startIdx + win.count);
@@ -1309,12 +1372,16 @@ function renderBigLine(svg, fullSeries, positive){
     '<path d="' + areaD + '" fill="url(#' + gid + ')" stroke="none"/>' +
     '<path d="' + res.d + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
     '<circle cx="' + res.lastX.toFixed(2) + '" cy="' + (padTop + (1 - (series[series.length-1].p - res.min) / ((res.max-res.min)||1)) * (h - padTop - padBottom)).toFixed(2) + '" r="3.5" fill="' + color + '"/>';
+
+  lastChartType = "line";
+  lastVisibleData = series;
+  lastYRange = { min: res.min, max: res.max };
 }
 
 function renderBigCandles(svg, fullCandles){
   var vb = svg.viewBox.baseVal;
   var w = vb.width || 1000, h = vb.height || 380;
-  var padTop = 24, padBottom = 30;
+  var padTop = CHART_PAD_TOP, padBottom = CHART_PAD_BOTTOM;
   var innerH = h - padTop - padBottom;
 
   var win = computeVisibleWindow(fullCandles.length);
@@ -1352,6 +1419,10 @@ function renderBigCandles(svg, fullCandles){
   });
 
   svg.innerHTML = gridLines + body;
+
+  lastChartType = "candle";
+  lastVisibleData = candles;
+  lastYRange = { min: min, max: max };
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1589,6 +1660,134 @@ function redrawBigChart(){
   }
   updateAxisLabels();
   updateZoomIndicator();
+
+  if(chartCrosshair.active){
+    updateCrosshair(chartCrosshair.clientX, chartCrosshair.clientY);
+  } else if(lastVisibleData && lastVisibleData.length){
+    updateOhlcOverlay(lastVisibleData[lastVisibleData.length - 1]);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* TradingView-style crosshair                                             */
+/* ---------------------------------------------------------------------- */
+
+/* Fills the always-visible top-left legend: OHLC for candles, last/hovered
+   price for the line chart. `point` is a raw data point (line) or candle. */
+function updateOhlcOverlay(point){
+  var el = document.getElementById("chartOhlcOverlay");
+  if(!el) return;
+  if(!point){ el.innerHTML = ""; return; }
+  if(lastChartType === "line"){
+    el.innerHTML = '<span>Price <b>\u20B9' + formatNumber(point.p, point.p > 1000 ? 0 : 2) + '</b></span>';
+  } else {
+    var up = point.c >= point.o;
+    el.innerHTML =
+      '<span>O <b>' + formatNumber(point.o, point.o > 1000 ? 0 : 2) + '</b></span>' +
+      '<span>H <b>' + formatNumber(point.h, point.h > 1000 ? 0 : 2) + '</b></span>' +
+      '<span>L <b>' + formatNumber(point.l, point.l > 1000 ? 0 : 2) + '</b></span>' +
+      '<span>C <b class="' + (up ? "ohlc-pos" : "ohlc-neg") + '">' + formatNumber(point.c, point.c > 1000 ? 0 : 2) + '</b></span>';
+  }
+}
+
+/* Hides the crosshair lines/axis labels and falls back the OHLC legend to
+   the latest bar - called on pointerleave and whenever there's nothing
+   sensible to show the crosshair over. */
+function hideCrosshair(){
+  chartCrosshair.active = false;
+  var svgEl = document.getElementById("chartCrosshairSvg");
+  if(svgEl) svgEl.classList.remove("cx-active");
+  var xLabel = document.getElementById("cxXLabel");
+  var yLabel = document.getElementById("cxYLabel");
+  if(xLabel) xLabel.classList.remove("cx-active");
+  if(yLabel) yLabel.classList.remove("cx-active");
+  if(lastVisibleData && lastVisibleData.length){
+    updateOhlcOverlay(lastVisibleData[lastVisibleData.length - 1]);
+  }
+}
+
+/* Moves the crosshair (dotted +) to the data point nearest the given
+   viewport coordinates: the vertical line + OHLC legend snap to the nearest
+   bar, while the horizontal line & its price label follow the raw cursor Y
+   (so you can read an arbitrary price level), matching TradingView's crosshair. */
+function updateCrosshair(clientX, clientY){
+  if(!state.selectedAssetId || !lastVisibleData || !lastVisibleData.length || !lastChartLayout.count){
+    hideCrosshair();
+    return;
+  }
+  var wrap = document.getElementById("chartCanvasWrap");
+  var svgEl = document.getElementById("chartCrosshairSvg");
+  var bigSvg = document.getElementById("bigChartSvg");
+  if(!wrap || !svgEl || !bigSvg) return;
+
+  var wrapRect = wrap.getBoundingClientRect();
+  var svgRect = svgEl.getBoundingClientRect();
+  if(!svgRect.width || !svgRect.height){ hideCrosshair(); return; }
+
+  var localX = clientX - svgRect.left;
+  var localY = clientY - svgRect.top;
+  if(localX < 0 || localX > svgRect.width || localY < 0 || localY > svgRect.height){
+    hideCrosshair();
+    return;
+  }
+
+  var vb = bigSvg.viewBox.baseVal;
+  var vbW = vb.width || 1000, vbH = vb.height || 380;
+  var vbX = (localX / svgRect.width) * vbW;
+  var vbY = (localY / svgRect.height) * vbH;
+
+  var count = lastChartLayout.count;
+  var idx, dataX;
+  if(lastChartType === "line"){
+    var stepX = vbW / ((count - 1) || 1);
+    idx = clampNum(Math.round(vbX / stepX), 0, count - 1);
+    dataX = idx * stepX;
+  } else {
+    var slot = vbW / count;
+    idx = clampNum(Math.floor(vbX / slot), 0, count - 1);
+    dataX = idx * slot + slot / 2;
+  }
+
+  var point = lastVisibleData[idx];
+  if(!point){ hideCrosshair(); return; }
+
+  var innerH = vbH - CHART_PAD_TOP - CHART_PAD_BOTTOM;
+  var rangeSpan = (lastYRange.max - lastYRange.min) || 1;
+  var priceAtCursor = lastYRange.max - ((vbY - CHART_PAD_TOP) / innerH) * rangeSpan;
+  var dotPrice = lastChartType === "line" ? point.p : point.c;
+  var dotY = CHART_PAD_TOP + (1 - (dotPrice - lastYRange.min) / rangeSpan) * innerH;
+
+  chartCrosshair.active = true;
+  chartCrosshair.clientX = clientX;
+  chartCrosshair.clientY = clientY;
+
+  svgEl.classList.add("cx-active");
+  document.getElementById("cxLineV").setAttribute("x1", dataX);
+  document.getElementById("cxLineV").setAttribute("x2", dataX);
+  document.getElementById("cxLineV").setAttribute("y2", vbH);
+  document.getElementById("cxLineH").setAttribute("y1", vbY);
+  document.getElementById("cxLineH").setAttribute("y2", vbY);
+  document.getElementById("cxLineH").setAttribute("x2", vbW);
+  var dot = document.getElementById("cxDot");
+  dot.setAttribute("cx", dataX);
+  dot.setAttribute("cy", clampNum(dotY, 0, vbH));
+
+  var wrapLocalY = clientY - wrapRect.top;
+  var svgLocalXInWrap = (svgRect.left - wrapRect.left) + (dataX / vbW) * svgRect.width;
+  var svgBottomInWrap = (svgRect.top - wrapRect.top) + svgRect.height;
+
+  var xLabel = document.getElementById("cxXLabel");
+  xLabel.textContent = formatAgoForIndex(lastChartLayout.startIdx + idx, lastChartLayout.len);
+  xLabel.style.left = svgLocalXInWrap.toFixed(1) + "px";
+  xLabel.style.top = (svgBottomInWrap + 4).toFixed(1) + "px";
+  xLabel.classList.add("cx-active");
+
+  var yLabel = document.getElementById("cxYLabel");
+  yLabel.textContent = formatNumber(priceAtCursor, priceAtCursor > 1000 ? 0 : 2);
+  yLabel.style.top = wrapLocalY.toFixed(1) + "px";
+  yLabel.classList.add("cx-active");
+
+  updateOhlcOverlay(point);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1772,6 +1971,9 @@ function computeWholesale(){
     rateInput.disabled = true;
   } else {
     rateInput.disabled = false;
+    if(rateInput.value === ""){
+      rateInput.value = plainNumber(liveRate, 2); // convenience starting point, not "live" tracking
+    }
     rate = parseFloat(rateInput.value) || 0;
   }
 
@@ -1822,6 +2024,9 @@ function computeRetail(triggerField){
     rateInput.disabled = true;
   } else {
     rateInput.disabled = false;
+    if(rateInput.value === ""){
+      rateInput.value = plainNumber(liveRate, 2); // convenience starting point, not "live" tracking
+    }
     rate = parseFloat(rateInput.value) || 0;
   }
 
@@ -2052,6 +2257,7 @@ function wireChartInteractions(){
     if(pts.length >= 2){
       chartDrag = null;
       wrap.classList.remove("dragging");
+      hideCrosshair();
       var dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
       chartPinch = { startDist: dist || 1, startWidth: chartZoom.widthFrac, layout: Object.assign({}, lastChartLayout) };
     } else {
@@ -2107,6 +2313,18 @@ function wireChartInteractions(){
   wrap.addEventListener("pointercancel", releasePointer);
   wrap.addEventListener("pointerleave", function(e){
     if(pointersArray().length <= 1) releasePointer(e);
+  });
+
+  /* Crosshair: tracks the primary pointer on plain hover too (not just
+     while a button/finger is down), unlike the drag listener above. For
+     mouse this fires continuously on hover; for touch it naturally only
+     fires during an active drag, which still looks right. */
+  wrap.addEventListener("pointermove", function(e){
+    if(pointersArray().length >= 2) return; // mid-pinch: no single-point crosshair
+    updateCrosshair(e.clientX, e.clientY);
+  });
+  wrap.addEventListener("pointerleave", function(){
+    hideCrosshair();
   });
 }
 
